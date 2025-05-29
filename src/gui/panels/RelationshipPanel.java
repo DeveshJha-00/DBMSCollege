@@ -308,6 +308,30 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
 
         // Remove song-genre button
         removeSongGenreButton.addActionListener(e -> removeSongGenre());
+
+        // Search functionality for performance table
+        performanceSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                filterPerformanceTable();
+            }
+        });
+
+        // Search functionality for artist-award table
+        artistAwardSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                filterArtistAwardTable();
+            }
+        });
+
+        // Search functionality for song-genre table
+        songGenreSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                filterSongGenreTable();
+            }
+        });
     }
 
     // Action methods for performance management
@@ -406,6 +430,43 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
                 JOptionPane.showMessageDialog(this, "Song genre removed successfully!",
                                             "Success", JOptionPane.INFORMATION_MESSAGE);
             }
+        }
+    }
+
+    // Search filter methods
+    private void filterPerformanceTable() {
+        String searchText = performanceSearchField.getText().toLowerCase().trim();
+        TableRowSorter<PerformanceTableModel> sorter =
+            (TableRowSorter<PerformanceTableModel>) performanceTable.getRowSorter();
+
+        if (searchText.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText));
+        }
+    }
+
+    private void filterArtistAwardTable() {
+        String searchText = artistAwardSearchField.getText().toLowerCase().trim();
+        TableRowSorter<ArtistAwardTableModel> sorter =
+            (TableRowSorter<ArtistAwardTableModel>) artistAwardTable.getRowSorter();
+
+        if (searchText.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText));
+        }
+    }
+
+    private void filterSongGenreTable() {
+        String searchText = songGenreSearchField.getText().toLowerCase().trim();
+        TableRowSorter<SongGenreTableModel> sorter =
+            (TableRowSorter<SongGenreTableModel>) songGenreTable.getRowSorter();
+
+        if (searchText.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText));
         }
     }
 
