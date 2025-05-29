@@ -158,6 +158,35 @@ public class MusicService {
         return awards;
     }
 
+    /**
+     * Get all artists who received a specific award
+     */
+    public List<Artist> getArtistsByAward(int awardId) {
+        List<Artist> artists = new ArrayList<>();
+        String sql = "SELECT a.* FROM artists a " +
+                    "JOIN receives r ON a.artist_id = r.artist_id " +
+                    "WHERE r.award_id = ? ORDER BY a.name";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, awardId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Artist artist = new Artist();
+                artist.setArtistId(rs.getInt("artist_id"));
+                artist.setName(rs.getString("name"));
+                artist.setCountry(rs.getString("country"));
+                artist.setBirthYear(rs.getInt("birth_year"));
+                artists.add(artist);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting artists by award: " + e.getMessage());
+        }
+        return artists;
+    }
+
     // Song-Genre relationship methods (BELONGS_TO)
 
     /**
@@ -373,6 +402,34 @@ public class MusicService {
             System.err.println("Error removing song from album: " + e.getMessage());
         }
         return false;
+    }
+
+    /**
+     * Get all albums that contain a specific song
+     */
+    public List<Album> getAlbumsBySong(int songId) {
+        List<Album> albums = new ArrayList<>();
+        String sql = "SELECT a.* FROM albums a " +
+                    "JOIN contains c ON a.album_id = c.album_id " +
+                    "WHERE c.song_id = ? ORDER BY a.title";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, songId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Album album = new Album();
+                album.setAlbumId(rs.getInt("album_id"));
+                album.setTitle(rs.getString("title"));
+                album.setReleaseYear(rs.getInt("release_year"));
+                albums.add(album);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting albums by song: " + e.getMessage());
+        }
+        return albums;
     }
 
     // Getter methods for DAOs

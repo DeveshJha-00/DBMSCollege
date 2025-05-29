@@ -1,16 +1,19 @@
 import service.MusicService;
 import controller.*;
 import util.InputHelper;
+import gui.MusicStreamingGUI;
+
+import javax.swing.*;
 
 /**
  * Main application class for the Music Streaming Application
- * Provides a console-based interface to interact with the music database
+ * Provides both console-based and GUI interface to interact with the music database
  */
 public class MusicStreamingApp {
 
     private MusicService musicService;
     private InputHelper inputHelper;
-    
+
     // Controllers
     private ArtistController artistController;
     private SongController songController;
@@ -23,7 +26,7 @@ public class MusicStreamingApp {
     public MusicStreamingApp() {
         this.musicService = new MusicService();
         this.inputHelper = new InputHelper();
-        
+
         // Initialize controllers
         this.artistController = new ArtistController(musicService, inputHelper);
         this.songController = new SongController(musicService, inputHelper);
@@ -41,7 +44,32 @@ public class MusicStreamingApp {
 
     public void run() {
         System.out.println("=== Welcome to Music Streaming Application ===");
+        System.out.println("Choose interface mode:");
+        System.out.println("1. Console Interface");
+        System.out.println("2. GUI Interface");
 
+        int interfaceChoice = inputHelper.getIntInput("Enter your choice (1 or 2): ");
+
+        if (interfaceChoice == 2) {
+            runGUI();
+        } else {
+            runConsole();
+        }
+    }
+
+    public void runGUI() {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                // Use default look and feel if system look and feel fails
+            }
+
+            new MusicStreamingGUI(musicService).setVisible(true);
+        });
+    }
+
+    public void runConsole() {
         while (true) {
             displayMainMenu();
             int choice = inputHelper.getIntInput("Enter your choice: ");
