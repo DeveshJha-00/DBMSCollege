@@ -1,5 +1,9 @@
 import database.DatabaseConnection;
+import gui.MainWindow;
 import java.sql.*;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import util.InputHelper;
 
 /**
  * Main class to test database connection and launch the Music Streaming Application
@@ -15,10 +19,41 @@ public class Main {
                 System.out.println("Database Product: " + conn.getMetaData().getDatabaseProductName());
                 System.out.println("Database Version: " + conn.getMetaData().getDatabaseProductVersion());
 
-                // Launch the music streaming application
-                System.out.println("\nLaunching Music Streaming Application...");
-                MusicStreamingApp app = new MusicStreamingApp();
-                app.run();
+                // Choose interface
+                System.out.println("\n=== Music Streaming Application ===");
+                System.out.println("Choose interface:");
+                System.out.println("1. Console Interface");
+                System.out.println("2. GUI Interface");
+
+                InputHelper inputHelper = new InputHelper();
+                int choice = inputHelper.getIntInput("Enter your choice: ");
+
+                switch (choice) {
+                    case 1:
+                        // Start console application
+                        System.out.println("\nLaunching Console Application...");
+                        MusicStreamingApp consoleApp = new MusicStreamingApp();
+                        consoleApp.run();
+                        break;
+                    case 2:
+                        // Start GUI application
+                        System.out.println("\nLaunching GUI Application...");
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                // Set system look and feel
+                                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            new MainWindow().setVisible(true);
+                        });
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Starting console interface...");
+                        MusicStreamingApp defaultApp = new MusicStreamingApp();
+                        defaultApp.run();
+                }
 
             } else {
                 System.out.println("✗ Failed to establish database connection!");

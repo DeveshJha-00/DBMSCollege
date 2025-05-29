@@ -6,6 +6,13 @@
         "name": "Main",
         "request": "launch",
         "mainClass": "Main",
+        "projectName": "DBMSCollege_1d795361"
+    },
+    {
+        "type": "java",
+        "name": "Main",
+        "request": "launch",
+        "mainClass": "Main",
         "projectName": "MusicStreamingProject_307d4d7a"
     },
     {

@@ -1,14 +1,20 @@
 -- SQL script to migrate existing database to new CONTAINS relationship structure
 -- Run this if you have the old structure and want to update to the new one
 
+
 USE musicdb;
 
 -- Step 1: Update schema to new structure
 -- Remove no_of_songs from albums table
-ALTER TABLE albums DROP COLUMN IF EXISTS no_of_songs;
+ALTER TABLE albums DROP COLUMN no_of_songs;
+
 
 -- Remove album_id from songs table
-ALTER TABLE songs DROP COLUMN IF EXISTS album_id;
+CREATE DATABASE IF NOT EXISTS musicdb;
+USE musicdb;
+DROP DATABASE musicdb;
+CREATE DATABASE musicdb;
+USE musicdb;
 
 -- Create the new CONTAINS relationship table
 CREATE TABLE IF NOT EXISTS contains (
