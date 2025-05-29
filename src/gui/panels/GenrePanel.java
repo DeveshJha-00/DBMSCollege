@@ -6,7 +6,6 @@ import gui.MainWindow.RefreshablePanel;
 import gui.dialogs.GenreDialog;
 import gui.models.GenreTableModel;
 import gui.utils.UIConstants;
-import gui.utils.IconManager;
 
 import javax.swing.*;
 import javax.swing.table.TableRowSorter;
@@ -42,35 +41,25 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
         tableModel = new GenreTableModel();
         genreTable = new JTable(tableModel);
         genreTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        genreTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
-        genreTable.setFont(UIConstants.BODY_FONT);
+
+        // Configure table appearance
+        UIConstants.configureTable(genreTable);
         genreTable.getTableHeader().setFont(UIConstants.SUBTITLE_FONT);
-        genreTable.setGridColor(new Color(224, 224, 224));
-        genreTable.setSelectionBackground(UIConstants.SELECTED_BACKGROUND);
 
         // Create sorter
         sorter = new TableRowSorter<>(tableModel);
         genreTable.setRowSorter(sorter);
 
         // Create search field
-        searchField = UIConstants.createStyledTextField(20);
+        searchField = new JTextField(20);
         searchField.setToolTipText("Search genres by name or description");
 
-        // Create styled buttons
-        addButton = UIConstants.createPrimaryButton("Add Genre");
-        addButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
-
-        editButton = UIConstants.createSecondaryButton("Edit Genre");
-        editButton.setIcon(IconManager.getIcon("edit", 16, UIConstants.TEXT_PRIMARY));
-
-        deleteButton = UIConstants.createSecondaryButton("Delete Genre");
-        deleteButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.ERROR_COLOR));
-
-        viewSongsButton = UIConstants.createSecondaryButton("View Songs");
-        viewSongsButton.setIcon(IconManager.getIcon("view", 16, UIConstants.TEXT_PRIMARY));
-
-        refreshButton = UIConstants.createSecondaryButton("Refresh");
-        refreshButton.setIcon(IconManager.getIcon("refresh", 16, UIConstants.TEXT_PRIMARY));
+        // Create buttons
+        addButton = new JButton("Add Genre");
+        editButton = new JButton("Edit Genre");
+        deleteButton = new JButton("Delete Genre");
+        viewSongsButton = new JButton("View Songs");
+        refreshButton = new JButton("Refresh");
 
         // Initially disable buttons that require selection
         editButton.setEnabled(false);
@@ -91,8 +80,7 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
 
         // Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.SUBTITLE_FONT));
+        searchPanel.add(new JLabel("Search:"));
         searchPanel.add(searchField);
 
         // Button panel
@@ -288,6 +276,7 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
         JList<String> songsList = new JList<>(listModel);
         songsList.setFont(UIConstants.BODY_FONT);
         songsList.setSelectionBackground(UIConstants.SELECTED_BACKGROUND);
+        songsList.setSelectionForeground(UIConstants.SELECTED_TEXT_COLOR);
 
         JScrollPane scrollPane = new JScrollPane(songsList);
         scrollPane.setPreferredSize(new Dimension(400, 300));

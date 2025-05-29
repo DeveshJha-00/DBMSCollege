@@ -116,19 +116,17 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         // Initialize components
         performanceTableModel = new PerformanceTableModel(musicService);
         performanceTable = new JTable(performanceTableModel);
-        performanceTable.setFont(UIConstants.BODY_FONT);
-        performanceTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         performanceTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Configure table appearance
+        UIConstants.configureTable(performanceTable);
         performanceTable.setRowSorter(new TableRowSorter<>(performanceTableModel));
 
-        performanceSearchField = UIConstants.createStyledTextField(20);
+        performanceSearchField = new JTextField(20);
         performanceSearchField.setToolTipText("Search performances...");
 
-        addPerformanceButton = UIConstants.createPrimaryButton("Add Performance");
-        addPerformanceButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
-
-        removePerformanceButton = UIConstants.createSecondaryButton("Remove");
-        removePerformanceButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.TEXT_PRIMARY));
+        addPerformanceButton = new JButton("Add Performance");
+        removePerformanceButton = new JButton("Remove");
         removePerformanceButton.setEnabled(false);
 
         // Create top panel with search and buttons
@@ -136,8 +134,7 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.BODY_FONT));
+        searchPanel.add(new JLabel("Search:"));
         searchPanel.add(performanceSearchField);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -165,19 +162,17 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         // Initialize components
         albumSongTableModel = new AlbumSongTableModel(musicService);
         albumSongTable = new JTable(albumSongTableModel);
-        albumSongTable.setFont(UIConstants.BODY_FONT);
-        albumSongTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         albumSongTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Configure table appearance
+        UIConstants.configureTable(albumSongTable);
         albumSongTable.setRowSorter(new TableRowSorter<>(albumSongTableModel));
 
-        albumSongSearchField = UIConstants.createStyledTextField(20);
+        albumSongSearchField = new JTextField(20);
         albumSongSearchField.setToolTipText("Search album songs...");
 
-        addAlbumSongButton = UIConstants.createPrimaryButton("Add Song to Album");
-        addAlbumSongButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
-
-        removeAlbumSongButton = UIConstants.createSecondaryButton("Remove");
-        removeAlbumSongButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.TEXT_PRIMARY));
+        addAlbumSongButton = new JButton("Add Song to Album");
+        removeAlbumSongButton = new JButton("Remove");
         removeAlbumSongButton.setEnabled(false);
 
         // Create top panel with search and buttons
@@ -214,19 +209,17 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         // Initialize components
         artistAwardTableModel = new ArtistAwardTableModel(musicService);
         artistAwardTable = new JTable(artistAwardTableModel);
-        artistAwardTable.setFont(UIConstants.BODY_FONT);
-        artistAwardTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         artistAwardTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Configure table appearance
+        UIConstants.configureTable(artistAwardTable);
         artistAwardTable.setRowSorter(new TableRowSorter<>(artistAwardTableModel));
 
-        artistAwardSearchField = UIConstants.createStyledTextField(20);
+        artistAwardSearchField = new JTextField(20);
         artistAwardSearchField.setToolTipText("Search artist awards...");
 
-        addArtistAwardButton = UIConstants.createPrimaryButton("Add Award");
-        addArtistAwardButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
-
-        removeArtistAwardButton = UIConstants.createSecondaryButton("Remove");
-        removeArtistAwardButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.TEXT_PRIMARY));
+        addArtistAwardButton = new JButton("Add Award");
+        removeArtistAwardButton = new JButton("Remove");
         removeArtistAwardButton.setEnabled(false);
 
         // Create top panel with search and buttons
@@ -263,19 +256,17 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         // Initialize components
         songGenreTableModel = new SongGenreTableModel(musicService);
         songGenreTable = new JTable(songGenreTableModel);
-        songGenreTable.setFont(UIConstants.BODY_FONT);
-        songGenreTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
         songGenreTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Configure table appearance
+        UIConstants.configureTable(songGenreTable);
         songGenreTable.setRowSorter(new TableRowSorter<>(songGenreTableModel));
 
-        songGenreSearchField = UIConstants.createStyledTextField(20);
+        songGenreSearchField = new JTextField(20);
         songGenreSearchField.setToolTipText("Search song genres...");
 
-        addSongGenreButton = UIConstants.createPrimaryButton("Add Genre");
-        addSongGenreButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
-
-        removeSongGenreButton = UIConstants.createSecondaryButton("Remove");
-        removeSongGenreButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.TEXT_PRIMARY));
+        addSongGenreButton = new JButton("Add Genre");
+        removeSongGenreButton = new JButton("Remove");
         removeSongGenreButton.setEnabled(false);
 
         // Create top panel with search and buttons
@@ -283,8 +274,7 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.BODY_FONT));
+        searchPanel.add(new JLabel("Search:"));
         searchPanel.add(songGenreSearchField);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));

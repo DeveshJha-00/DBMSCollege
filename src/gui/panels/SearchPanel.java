@@ -33,7 +33,7 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         setBackground(UIConstants.PANEL_BACKGROUND);
 
         // Search field
-        searchField = UIConstants.createStyledTextField(30);
+        searchField = new JTextField(30);
         searchField.setToolTipText("Enter search terms");
 
         // Search type combo
@@ -42,33 +42,25 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             "Songs Only", "Genres Only", "Awards Only"
         };
         searchTypeCombo = new JComboBox<>(searchTypes);
-        searchTypeCombo.setFont(UIConstants.BODY_FONT);
-        searchTypeCombo.setBackground(UIConstants.PANEL_BACKGROUND);
 
         // Results area
         resultsArea = new JTextArea(15, 50);
-        resultsArea.setFont(UIConstants.BODY_FONT);
         resultsArea.setEditable(false);
-        resultsArea.setBackground(UIConstants.PANEL_BACKGROUND);
-        resultsArea.setBorder(UIConstants.FIELD_BORDER);
         resultsArea.setText("Enter search terms above and click 'Search' to find results...");
 
-        // Buttons
-        searchButton = UIConstants.createPrimaryButton("Search");
-        searchButton.setIcon(IconManager.getIcon("search", 16, UIConstants.TEXT_ON_PRIMARY));
+        // Buttons - simple buttons for search and clear
+        searchButton = new JButton("Search");
+        clearButton = new JButton("Clear");
 
-        clearButton = UIConstants.createSecondaryButton("Clear");
-        clearButton.setIcon(IconManager.getIcon("cancel", 16, UIConstants.TEXT_PRIMARY));
-
-        advancedSearchButton = UIConstants.createSecondaryButton("Advanced");
+        advancedSearchButton = UIConstants.createSecondaryButton("Advanced Search Options", true);
         advancedSearchButton.setIcon(IconManager.getIcon("settings", 16, UIConstants.TEXT_PRIMARY));
         advancedSearchButton.setToolTipText("Advanced search options");
 
-        browseButton = UIConstants.createSecondaryButton("Browse");
+        browseButton = UIConstants.createSecondaryButton("Browse", true);
         browseButton.setIcon(IconManager.getIcon("folder", 16, UIConstants.TEXT_PRIMARY));
         browseButton.setToolTipText("Browse by category");
 
-        statisticsButton = UIConstants.createSecondaryButton("Statistics");
+        statisticsButton = UIConstants.createSecondaryButton("View Data Statistics", true);
         statisticsButton.setIcon(IconManager.getIcon("chart", 16, UIConstants.TEXT_PRIMARY));
         statisticsButton.setToolTipText("View database statistics");
     }
@@ -106,7 +98,7 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
 
         // Search type
         gbc.gridx = 0; gbc.gridy = 0;
-        searchPanel.add(UIConstants.createStyledLabel("Search in:", UIConstants.SUBTITLE_FONT), gbc);
+        searchPanel.add(new JLabel("Search in:"), gbc);
 
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 0.3;
         searchPanel.add(searchTypeCombo, gbc);

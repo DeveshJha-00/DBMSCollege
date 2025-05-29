@@ -3,7 +3,6 @@ package gui.panels;
 import gui.MainWindow.RefreshablePanel;
 import gui.dialogs.AwardDialog;
 import gui.models.AwardTableModel;
-import gui.utils.IconManager;
 import gui.utils.UIConstants;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -41,35 +40,25 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         tableModel = new AwardTableModel();
         awardTable = new JTable(tableModel);
         awardTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        awardTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
-        awardTable.setFont(UIConstants.BODY_FONT);
+
+        // Configure table appearance
+        UIConstants.configureTable(awardTable);
         awardTable.getTableHeader().setFont(UIConstants.SUBTITLE_FONT);
-        awardTable.setGridColor(new Color(224, 224, 224));
-        awardTable.setSelectionBackground(UIConstants.SELECTED_BACKGROUND);
 
         // Create sorter
         sorter = new TableRowSorter<>(tableModel);
         awardTable.setRowSorter(sorter);
 
         // Create search field
-        searchField = UIConstants.createStyledTextField(20);
+        searchField = new JTextField(20);
         searchField.setToolTipText("Search awards by name or year");
 
-        // Create styled buttons
-        addButton = UIConstants.createPrimaryButton("Add Award");
-        addButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
-
-        editButton = UIConstants.createSecondaryButton("Edit Award");
-        editButton.setIcon(IconManager.getIcon("edit", 16, UIConstants.TEXT_PRIMARY));
-
-        deleteButton = UIConstants.createSecondaryButton("Delete Award");
-        deleteButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.ERROR_COLOR));
-
-        viewRecipientsButton = UIConstants.createSecondaryButton("View Recipients");
-        viewRecipientsButton.setIcon(IconManager.getIcon("view", 16, UIConstants.TEXT_PRIMARY));
-
-        refreshButton = UIConstants.createSecondaryButton("Refresh");
-        refreshButton.setIcon(IconManager.getIcon("refresh", 16, UIConstants.TEXT_PRIMARY));
+        // Create buttons
+        addButton = new JButton("Add Award");
+        editButton = new JButton("Edit Award");
+        deleteButton = new JButton("Delete Award");
+        viewRecipientsButton = new JButton("View Recipients");
+        refreshButton = new JButton("Refresh");
 
         // Initially disable buttons that require selection
         editButton.setEnabled(false);
@@ -90,8 +79,7 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
 
         // Search panel
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.SUBTITLE_FONT));
+        searchPanel.add(new JLabel("Search:"));
         searchPanel.add(searchField);
 
         // Button panel
@@ -291,6 +279,7 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         JList<String> artistsList = new JList<>(listModel);
         artistsList.setFont(UIConstants.BODY_FONT);
         artistsList.setSelectionBackground(UIConstants.SELECTED_BACKGROUND);
+        artistsList.setSelectionForeground(UIConstants.SELECTED_TEXT_COLOR);
 
         JScrollPane scrollPane = new JScrollPane(artistsList);
         scrollPane.setPreferredSize(new Dimension(400, 300));

@@ -22,7 +22,7 @@ public class UIConstants {
     // Background Colors
     public static final Color BACKGROUND_COLOR = new Color(250, 250, 250);   // Light Gray
     public static final Color PANEL_BACKGROUND = Color.WHITE;
-    public static final Color SELECTED_BACKGROUND = new Color(232, 245, 233); // Light Green
+    public static final Color SELECTED_BACKGROUND = new Color(63, 81, 181);  // Primary color for better contrast
     public static final Color HOVER_BACKGROUND = new Color(245, 245, 245);   // Very Light Gray
 
     // Text Colors
@@ -30,6 +30,7 @@ public class UIConstants {
     public static final Color TEXT_SECONDARY = new Color(117, 117, 117);     // Medium Gray
     public static final Color TEXT_DISABLED = new Color(189, 189, 189);      // Light Gray
     public static final Color TEXT_ON_PRIMARY = Color.WHITE;
+    public static final Color SELECTED_TEXT_COLOR = Color.WHITE;             // White text on selected background
 
     // Fonts
     public static final Font TITLE_FONT = new Font("Segoe UI", Font.BOLD, 18);
@@ -39,10 +40,11 @@ public class UIConstants {
     public static final Font BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 12);
 
     // Dimensions
-    public static final int BUTTON_HEIGHT = 32;
-    public static final int BUTTON_WIDTH = 100;
+    public static final int BUTTON_HEIGHT = 35;
+    public static final int BUTTON_WIDTH = 120;
+    public static final int LARGE_BUTTON_WIDTH = 180;
     public static final int FIELD_HEIGHT = 28;
-    public static final int TABLE_ROW_HEIGHT = 28;
+    public static final int TABLE_ROW_HEIGHT = 30;
     public static final int PANEL_PADDING = 16;
     public static final int COMPONENT_SPACING = 8;
     public static final int LARGE_SPACING = 16;
@@ -100,13 +102,23 @@ public class UIConstants {
      * Create a styled button with primary color scheme
      */
     public static JButton createPrimaryButton(String text) {
+        return createPrimaryButton(text, false);
+    }
+
+    /**
+     * Create a styled button with primary color scheme
+     */
+    public static JButton createPrimaryButton(String text, boolean isLarge) {
         JButton button = new JButton(text);
         button.setFont(BUTTON_FONT);
         button.setForeground(TEXT_ON_PRIMARY);
         button.setBackground(PRIMARY_COLOR);
         button.setBorder(BUTTON_BORDER);
         button.setFocusPainted(false);
-        button.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        int width = isLarge ? LARGE_BUTTON_WIDTH : BUTTON_WIDTH;
+        button.setPreferredSize(new Dimension(width, BUTTON_HEIGHT));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Add hover effect
@@ -114,11 +126,13 @@ public class UIConstants {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 button.setBackground(PRIMARY_DARK);
+                button.setForeground(TEXT_ON_PRIMARY);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 button.setBackground(PRIMARY_COLOR);
+                button.setForeground(TEXT_ON_PRIMARY);
             }
         });
 
@@ -129,6 +143,13 @@ public class UIConstants {
      * Create a styled button with secondary color scheme
      */
     public static JButton createSecondaryButton(String text) {
+        return createSecondaryButton(text, false);
+    }
+
+    /**
+     * Create a styled button with secondary color scheme
+     */
+    public static JButton createSecondaryButton(String text, boolean isLarge) {
         JButton button = new JButton(text);
         button.setFont(BUTTON_FONT);
         button.setForeground(TEXT_PRIMARY);
@@ -138,7 +159,10 @@ public class UIConstants {
             BorderFactory.createEmptyBorder(6, 16, 6, 16)
         ));
         button.setFocusPainted(false);
-        button.setPreferredSize(new Dimension(BUTTON_WIDTH, BUTTON_HEIGHT));
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        int width = isLarge ? LARGE_BUTTON_WIDTH : BUTTON_WIDTH;
+        button.setPreferredSize(new Dimension(width, BUTTON_HEIGHT));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Add hover effect
@@ -146,11 +170,13 @@ public class UIConstants {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
                 button.setBackground(HOVER_BACKGROUND);
+                button.setForeground(TEXT_PRIMARY);
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 button.setBackground(PANEL_BACKGROUND);
+                button.setForeground(TEXT_PRIMARY);
             }
         });
 
@@ -176,5 +202,42 @@ public class UIConstants {
         label.setFont(font);
         label.setForeground(TEXT_PRIMARY);
         return label;
+    }
+
+    /**
+     * Configure table appearance with centered alignment and proper column widths
+     */
+    public static void configureTable(JTable table) {
+        table.setFont(BODY_FONT);
+        table.setRowHeight(TABLE_ROW_HEIGHT);
+        table.setGridColor(new Color(224, 224, 224));
+        table.setShowGrid(true);
+        table.setIntercellSpacing(new Dimension(1, 1));
+
+        // Set selection colors for better visibility
+        table.setSelectionBackground(SELECTED_BACKGROUND);
+        table.setSelectionForeground(SELECTED_TEXT_COLOR);
+
+        // Set centered alignment for all columns
+        javax.swing.table.DefaultTableCellRenderer centerRenderer = new javax.swing.table.DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // Apply center alignment to all columns
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // Set specific column widths
+        if (table.getColumnCount() > 0) {
+            // First column (usually ID) should be narrower
+            table.getColumnModel().getColumn(0).setPreferredWidth(60);
+            table.getColumnModel().getColumn(0).setMaxWidth(80);
+            table.getColumnModel().getColumn(0).setMinWidth(50);
+
+            // Other columns get more space
+            for (int i = 1; i < table.getColumnCount(); i++) {
+                table.getColumnModel().getColumn(i).setPreferredWidth(150);
+            }
+        }
     }
 }
