@@ -1,9 +1,11 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
+import gui.dialogs.AlbumSongDialog;
 import gui.dialogs.ArtistAwardDialog;
 import gui.dialogs.PerformanceDialog;
 import gui.dialogs.SongGenreDialog;
+import gui.models.AlbumSongTableModel;
 import gui.models.ArtistAwardTableModel;
 import gui.models.PerformanceTableModel;
 import gui.models.SongGenreTableModel;
@@ -42,8 +44,11 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
     private JButton addSongGenreButton, removeSongGenreButton;
     private JTextField songGenreSearchField;
 
-    // Album-Song relationship components (handled in AlbumPanel)
-    private JPanel albumSongPanel;
+    // Album-Song relationship components
+    private JTable albumSongTable;
+    private AlbumSongTableModel albumSongTableModel;
+    private JButton addAlbumSongButton, removeAlbumSongButton;
+    private JTextField albumSongSearchField;
 
     public RelationshipPanel(MusicService musicService) {
         this.musicService = musicService;
@@ -63,7 +68,7 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
 
         // Initialize relationship panels
         JPanel artistSongPanel = createArtistSongPanel();
-        albumSongPanel = createAlbumSongPanel();
+        JPanel albumSongPanel = createAlbumSongPanel();
         JPanel artistAwardPanel = createArtistAwardPanel();
         JPanel songGenrePanel = createSongGenrePanel();
 
@@ -157,17 +162,48 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(UIConstants.PANEL_BACKGROUND);
 
-        JLabel infoLabel = UIConstants.createStyledLabel("<html><center>" +
-            "<h3>Album-Song Relationships</h3><br>" +
-            "Album-Song relationships are managed in the Albums panel.<br><br>" +
-            "<b>To manage album tracks:</b><br>" +
-            "• Go to the Albums tab<br>" +
-            "• Select an album<br>" +
-            "• Use the 'Manage Songs' button<br><br>" +
-            "<i>This provides better integration with album management.</i>" +
-            "</center></html>", UIConstants.BODY_FONT);
+        // Initialize components
+        albumSongTableModel = new AlbumSongTableModel(musicService);
+        albumSongTable = new JTable(albumSongTableModel);
+        albumSongTable.setFont(UIConstants.BODY_FONT);
+        albumSongTable.setRowHeight(UIConstants.TABLE_ROW_HEIGHT);
+        albumSongTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        albumSongTable.setRowSorter(new TableRowSorter<>(albumSongTableModel));
 
-        panel.add(infoLabel, BorderLayout.CENTER);
+        albumSongSearchField = UIConstants.createStyledTextField(20);
+        albumSongSearchField.setToolTipText("Search album songs...");
+
+        addAlbumSongButton = UIConstants.createPrimaryButton("Add Song to Album");
+        addAlbumSongButton.setIcon(IconManager.getIcon("add", 16, UIConstants.TEXT_ON_PRIMARY));
+
+        removeAlbumSongButton = UIConstants.createSecondaryButton("Remove");
+        removeAlbumSongButton.setIcon(IconManager.getIcon("delete", 16, UIConstants.TEXT_PRIMARY));
+        removeAlbumSongButton.setEnabled(false);
+
+        // Create top panel with search and buttons
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.BODY_FONT));
+        searchPanel.add(albumSongSearchField);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        buttonPanel.add(addAlbumSongButton);
+        buttonPanel.add(removeAlbumSongButton);
+
+        topPanel.add(searchPanel, BorderLayout.WEST);
+        topPanel.add(buttonPanel, BorderLayout.EAST);
+
+        // Create table panel
+        JScrollPane scrollPane = new JScrollPane(albumSongTable);
+        scrollPane.setPreferredSize(new Dimension(600, 300));
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
         return panel;
     }
 
@@ -291,6 +327,13 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
             }
         });
 
+        // Album-Song table selection
+        albumSongTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                removeAlbumSongButton.setEnabled(albumSongTable.getSelectedRow() != -1);
+            }
+        });
+
         // Add performance button
         addPerformanceButton.addActionListener(e -> addPerformance());
 
@@ -308,6 +351,12 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
 
         // Remove song-genre button
         removeSongGenreButton.addActionListener(e -> removeSongGenre());
+
+        // Add album-song button
+        addAlbumSongButton.addActionListener(e -> addAlbumSong());
+
+        // Remove album-song button
+        removeAlbumSongButton.addActionListener(e -> removeAlbumSong());
 
         // Search functionality for performance table
         performanceSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -330,6 +379,14 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 filterSongGenreTable();
+            }
+        });
+
+        // Search functionality for album-song table
+        albumSongSearchField.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyReleased(java.awt.event.KeyEvent e) {
+                filterAlbumSongTable();
             }
         });
     }
@@ -433,6 +490,39 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         }
     }
 
+    // Action methods for album-song management
+    private void addAlbumSong() {
+        Frame parentFrame = (Frame) SwingUtilities.getWindowAncestor(this);
+        AlbumSongDialog dialog = new AlbumSongDialog(parentFrame, "Add Song to Album", musicService);
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            Album album = dialog.getSelectedAlbum();
+            Song song = dialog.getSelectedSong();
+            int totalSongs = dialog.getTotalSongs();
+
+            albumSongTableModel.addAlbumSong(album, song, totalSongs);
+            JOptionPane.showMessageDialog(this, "Song added to album successfully!",
+                                        "Success", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void removeAlbumSong() {
+        int selectedRow = albumSongTable.getSelectedRow();
+        if (selectedRow != -1) {
+            int modelRow = albumSongTable.convertRowIndexToModel(selectedRow);
+            int option = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to remove this song from the album?",
+                "Confirm Removal", JOptionPane.YES_NO_OPTION);
+
+            if (option == JOptionPane.YES_OPTION) {
+                albumSongTableModel.removeAlbumSong(modelRow);
+                JOptionPane.showMessageDialog(this, "Song removed from album successfully!",
+                                            "Success", JOptionPane.INFORMATION_MESSAGE);
+            }
+        }
+    }
+
     // Search filter methods
     private void filterPerformanceTable() {
         String searchText = performanceSearchField.getText().toLowerCase().trim();
@@ -470,6 +560,18 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         }
     }
 
+    private void filterAlbumSongTable() {
+        String searchText = albumSongSearchField.getText().toLowerCase().trim();
+        TableRowSorter<AlbumSongTableModel> sorter =
+            (TableRowSorter<AlbumSongTableModel>) albumSongTable.getRowSorter();
+
+        if (searchText.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + searchText));
+        }
+    }
+
     @Override
     public void refreshData() {
         if (performanceTableModel != null) {
@@ -480,6 +582,9 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         }
         if (songGenreTableModel != null) {
             songGenreTableModel.loadData();
+        }
+        if (albumSongTableModel != null) {
+            albumSongTableModel.loadData();
         }
     }
 }

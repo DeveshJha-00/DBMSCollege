@@ -1,0 +1,58 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compile",
+            "type": "shell",
+            "command": "javac",
+            "args": [
+                "-cp",
+                "lib/*;src",
+                "-d",
+                "bin",
+                "src/*.java",
+                "src/model/*.java",
+                "src/dao/*.java",
+                "src/service/*.java",
+                "src/database/*.java",
+                "src/controller/*.java",
+                "src/util/*.java",
+                "src/gui/*.java",
+                "src/gui/panels/*.java",
+                "src/gui/dialogs/*.java",
+                "src/gui/models/*.java",
+                "src/gui/utils/*.java"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": "$javac"
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "rmdir",
+            "args": ["/s", "/q", "bin"],
+            "windows": {
+                "command": "rmdir",
+                "args": ["/s", "/q", "bin"]
+            },
+            "linux": {
+                "command": "rm",
+                "args": ["-rf", "bin"]
+            },
+            "osx": {
+                "command": "rm",
+                "args": ["-rf", "bin"]
+            },
+            "group": "build"
+        }
+    ]
+}

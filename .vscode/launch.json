@@ -6,20 +6,33 @@
         "name": "Main",
         "request": "launch",
         "mainClass": "Main",
-        "projectName": "DBMSCollege_1d795361"
+        "projectName": "MusicStreamingProject_307d4d7a"
     },
     {
         "type": "java",
         "name": "Main",
         "request": "launch",
         "mainClass": "Main",
-        "projectName": "MusicStreamingProject_307d4d7a"
+        "projectName": "MusicStreamingProject",
+        "classPaths": [
+            "lib/mysql-connector-j-9.3.0.jar"
+        ]
     },
     {
         "type": "java",
-        "name": "Launch Main",
+        "name": "TestMusicApp",
         "request": "launch",
-        "mainClass": "Main",
+        "mainClass": "TestMusicApp",
+        "projectName": "MusicStreamingProject",
+        "classPaths": [
+            "lib/mysql-connector-j-9.3.0.jar"
+        ]
+    },
+    {
+        "type": "java",
+        "name": "TestRelationships",
+        "request": "launch",
+        "mainClass": "TestRelationships",
         "projectName": "MusicStreamingProject",
         "classPaths": [
             "lib/mysql-connector-j-9.3.0.jar"
