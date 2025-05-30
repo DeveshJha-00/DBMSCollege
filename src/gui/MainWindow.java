@@ -222,20 +222,65 @@ public class MainWindow extends JFrame {
         // Create beautiful buttons with icons
         JButton refreshButton = UIConstants.createSecondaryButton("🔄 Refresh");
         refreshButton.setToolTipText("Refresh all data (F5)");
-        refreshButton.setForeground(UIConstants.TEXT_ON_PRIMARY);
+        refreshButton.setFont(new Font("Segoe UI", Font.BOLD, 12)); // Ensure bold font
+        refreshButton.setForeground(new Color(25, 25, 112)); // Dark blue for visibility on light background
         refreshButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
+
+        // Override hover effects to maintain proper contrast
+        refreshButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                refreshButton.setBackground(new Color(240, 240, 240, 150)); // Slightly darker on hover
+                refreshButton.setForeground(new Color(25, 25, 112)); // Keep dark text
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                refreshButton.setBackground(new Color(255, 255, 255, 100)); // Original background
+                refreshButton.setForeground(new Color(25, 25, 112)); // Keep dark text
+            }
+        });
         refreshButton.addActionListener(e -> refreshAllPanels());
 
         JButton searchButton = UIConstants.createSecondaryButton("🔍 Search");
         searchButton.setToolTipText("Open search panel (Ctrl+F)");
-        searchButton.setForeground(UIConstants.TEXT_ON_PRIMARY);
+        searchButton.setFont(new Font("Segoe UI", Font.BOLD, 12)); // Ensure bold font
+        searchButton.setForeground(new Color(25, 25, 112)); // Dark blue for visibility on light background
         searchButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
+
+        // Override hover effects to maintain proper contrast
+        searchButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                searchButton.setBackground(new Color(240, 240, 240, 150)); // Slightly darker on hover
+                searchButton.setForeground(new Color(25, 25, 112)); // Keep dark text
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                searchButton.setBackground(new Color(255, 255, 255, 100)); // Original background
+                searchButton.setForeground(new Color(25, 25, 112)); // Keep dark text
+            }
+        });
         searchButton.addActionListener(e -> tabbedPane.setSelectedIndex(6));
 
         JButton aboutButton = UIConstants.createSecondaryButton("ℹ️ About");
         aboutButton.setToolTipText("About this application");
-        aboutButton.setForeground(UIConstants.TEXT_ON_PRIMARY);
+        aboutButton.setFont(new Font("Segoe UI", Font.BOLD, 12)); // Ensure bold font
+        aboutButton.setForeground(new Color(25, 25, 112)); // Dark blue for visibility on light background
         aboutButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
+
+        // Override hover effects to maintain proper contrast
+        aboutButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                aboutButton.setBackground(new Color(240, 240, 240, 150)); // Slightly darker on hover
+                aboutButton.setForeground(new Color(25, 25, 112)); // Keep dark text
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                aboutButton.setBackground(new Color(255, 255, 255, 100)); // Original background
+                aboutButton.setForeground(new Color(25, 25, 112)); // Keep dark text
+            }
+        });
         aboutButton.addActionListener(e -> showAboutDialog());
 
         toolBar.add(Box.createHorizontalGlue()); // Push buttons to the right

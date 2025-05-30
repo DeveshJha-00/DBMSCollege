@@ -105,14 +105,33 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         scrollPane.setPreferredSize(new Dimension(700, 350));
         resultsCard.add(scrollPane, BorderLayout.CENTER);
 
-        // Layout main content
-        JPanel contentContainer = new JPanel(new BorderLayout());
+        // Layout main content using BoxLayout for better vertical control
+        JPanel contentContainer = new JPanel();
+        contentContainer.setLayout(new BoxLayout(contentContainer, BoxLayout.Y_AXIS));
         contentContainer.setBackground(UIConstants.BACKGROUND_COLOR);
-        contentContainer.add(searchCard, BorderLayout.NORTH);
-        contentContainer.add(Box.createVerticalStrut(15), BorderLayout.CENTER);
-        contentContainer.add(resultsCard, BorderLayout.SOUTH);
 
-        mainContentPanel.add(contentContainer, BorderLayout.CENTER);
+        // Add search card (with controls and feature cards)
+        contentContainer.add(searchCard);
+
+        // Add spacing
+        contentContainer.add(Box.createVerticalStrut(15));
+
+        // Add results card with proper sizing
+        resultsCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 400));
+        resultsCard.setPreferredSize(new Dimension(700, 400));
+        contentContainer.add(resultsCard);
+
+        // Add flexible space at bottom to push everything up
+        contentContainer.add(Box.createVerticalGlue());
+
+        // Wrap content container in a scroll pane for better accessibility
+        JScrollPane mainScrollPane = new JScrollPane(contentContainer);
+        mainScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        mainScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        mainScrollPane.setBorder(null);
+        mainScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+
+        mainContentPanel.add(mainScrollPane, BorderLayout.CENTER);
 
         // Add components to main panel
         add(headerPanel, BorderLayout.NORTH);
@@ -188,22 +207,33 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         final Color originalBackground = card.getBackground();
         final Border originalBorder = card.getBorder();
 
-        // Create simple, reliable hover effect
+        // Create simple, reliable hover effect that doesn't interfere with content display
         card.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                // Simple purple glow effect
-                card.setBackground(new Color(138, 43, 226, 40));
-                card.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(138, 43, 226), 3),
-                    BorderFactory.createEmptyBorder(12, 12, 12, 12)
-                ));
-                card.repaint();
+                // Only apply hover effect if not currently displaying any results content
+                // Check if results area has default text or is showing actual results
+                String currentText = resultsArea.getText();
+                boolean isShowingResults = currentText.contains("DATABASE STATISTICS") ||
+                                         currentText.contains("Search Results") ||
+                                         currentText.contains("ARTISTS:") ||
+                                         currentText.contains("SONGS:") ||
+                                         currentText.contains("ALBUMS:");
+
+                if (!isShowingResults) {
+                    // Simple purple glow effect
+                    card.setBackground(new Color(138, 43, 226, 40));
+                    card.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(138, 43, 226), 3),
+                        BorderFactory.createEmptyBorder(12, 12, 12, 12)
+                    ));
+                    card.repaint();
+                }
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                // Reset to original
+                // Always reset to original when mouse exits
                 card.setBackground(originalBackground);
                 card.setBorder(originalBorder);
                 card.repaint();
@@ -592,8 +622,22 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             stats.append("Artists with Birth Year: ").append(artistsWithBirthYear).append("\n");
         }
 
+        // Set the statistics text and ensure proper display
         resultsArea.setText(stats.toString());
         resultsArea.setCaretPosition(0);
+
+        // Ensure the results area is visible and has focus
+        resultsArea.requestFocusInWindow();
+
+        // Scroll to make the results area visible
+        SwingUtilities.invokeLater(() -> {
+            // Scroll the results area into view
+            resultsArea.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
+
+            // Force a repaint of the entire panel to ensure proper layering
+            this.revalidate();
+            this.repaint();
+        });
     }
 
     // Advanced search methods

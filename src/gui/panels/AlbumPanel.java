@@ -107,14 +107,14 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
 
         JLabel searchLabel = UIConstants.createStyledLabel("🔍 Search Albums:", UIConstants.SUBTITLE_FONT);
         searchLabel.setForeground(UIConstants.PRIMARY_COLOR);
-        searchField.setPreferredSize(new Dimension(200, 28));
+        searchField.setPreferredSize(new Dimension(220, 28));
 
         searchPanel.add(searchLabel);
         searchPanel.add(Box.createHorizontalStrut(8));
         searchPanel.add(searchField);
 
-        // Button section with beautiful styling
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        // Button section with beautiful styling and better spacing
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         buttonPanel.setOpaque(false);
 
         // Style buttons with EXTREMELY VISIBLE colors
@@ -177,7 +177,7 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
 
     private void styleButton(JButton button, String text, Color color) {
         button.setText(text);
-        button.setFont(new Font("Arial", Font.BOLD, 16)); // MUCH LARGER and bold font
+        button.setFont(new Font("Arial", Font.BOLD, 14)); // Optimized font size for smaller buttons
         button.setForeground(Color.BLACK); // BLACK text for maximum contrast
         button.setBackground(color);
 
@@ -195,9 +195,9 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
         button.setContentAreaFilled(true);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        // Set MUCH LARGER size for maximum visibility
-        button.setPreferredSize(new Dimension(180, 50)); // MUCH LARGER buttons
-        button.setMinimumSize(new Dimension(180, 50));
+        // Set optimized size for better layout without overlap
+        button.setPreferredSize(new Dimension(140, 40)); // Smaller but still visible buttons
+        button.setMinimumSize(new Dimension(140, 40));
 
         // Enhanced hover effect with better contrast
         button.addMouseListener(new java.awt.event.MouseAdapter() {
