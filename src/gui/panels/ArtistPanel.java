@@ -1,17 +1,19 @@
 package gui.panels;
 
-import service.MusicService;
-import model.Artist;
 import gui.MainWindow.RefreshablePanel;
 import gui.dialogs.ArtistDialog;
 import gui.models.ArtistTableModel;
-
-import javax.swing.*;
-import javax.swing.table.TableRowSorter;
+import gui.utils.BeautifulPanel;
+import gui.utils.LayoutHelper;
+import gui.utils.UIConstants;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.TableRowSorter;
+import model.Artist;
+import service.MusicService;
 
 /**
  * Panel for managing artists in the music database
@@ -65,35 +67,161 @@ public class ArtistPanel extends JPanel implements RefreshablePanel {
     private void setupLayout() {
         setLayout(new BorderLayout());
 
-        // Create top panel with search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout());
+        // Add beautiful gradient background for Artist panel
+        setBackground(UIConstants.BACKGROUND_COLOR);
+        setOpaque(false); // Make transparent to show custom background
 
-        // Search panel
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.add(new JLabel("Search:"));
+        // Create beautiful header with gradient
+        BeautifulPanel headerPanel = BeautifulPanel.createHeaderPanel(
+            "🎤 Artist Management",
+            "Manage your music artists - add, edit, search, and organize artist information"
+        );
+
+        // Create main content area
+        JPanel mainContentPanel = LayoutHelper.createContentArea();
+
+        // Create compact search and button panel
+        JPanel controlPanel = createCompactControlPanel();
+
+        // Create enhanced table panel
+        JPanel tablePanel = createEnhancedTablePanel();
+
+        // Layout main content with minimal spacing
+        mainContentPanel.add(controlPanel, BorderLayout.NORTH);
+        mainContentPanel.add(tablePanel, BorderLayout.CENTER);
+
+        // Add components to main panel
+        add(headerPanel, BorderLayout.NORTH);
+        add(mainContentPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createCompactControlPanel() {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // Search section
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        searchPanel.setOpaque(false);
+
+        JLabel searchLabel = UIConstants.createStyledLabel("🔍 Search:", UIConstants.SUBTITLE_FONT);
+        searchLabel.setForeground(UIConstants.PRIMARY_COLOR);
+        searchField.setPreferredSize(new Dimension(200, 28));
+
+        searchPanel.add(searchLabel);
+        searchPanel.add(Box.createHorizontalStrut(8));
         searchPanel.add(searchField);
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // Button section with beautiful styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        buttonPanel.setOpaque(false);
+
+        // Style buttons with EXTREMELY VISIBLE colors
+        styleButton(addButton, "➕ Add Artist", new Color(0, 255, 0));      // NEON GREEN
+        styleButton(editButton, "✏️ Edit", new Color(0, 150, 255));         // ELECTRIC BLUE
+        styleButton(deleteButton, "🗑️ Delete", new Color(255, 0, 0));       // PURE RED
+        styleButton(refreshButton, "🔄 Refresh", new Color(255, 0, 255));    // MAGENTA
+
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(refreshButton);
 
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
+        panel.add(searchPanel, BorderLayout.WEST);
+        panel.add(buttonPanel, BorderLayout.EAST);
 
-        // Create table panel with scroll pane
-        JScrollPane scrollPane = new JScrollPane(artistTable);
-        scrollPane.setPreferredSize(new Dimension(800, 400));
+        return panel;
+    }
 
-        // Create info panel
-        JPanel infoPanel = createInfoPanel();
+    private JPanel createEnhancedTablePanel() {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // Add components to main panel
-        add(topPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
-        add(infoPanel, BorderLayout.SOUTH);
+        // Apply modern table styling
+        UIConstants.applyModernTableStyling(artistTable);
+
+        // Create scroll pane with no extra space
+        JScrollPane scrollPane = UIConstants.createStyledScrollPane(artistTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(UIConstants.PRIMARY_LIGHT, 1));
+
+        // Add quick stats panel
+        JPanel statsPanel = createQuickStatsPanel();
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(statsPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createQuickStatsPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panel.setBackground(new Color(248, 249, 250));
+        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIConstants.PRIMARY_LIGHT));
+
+        JLabel statsLabel = UIConstants.createStyledLabel("📊 Artists: 0 | Selected: None", UIConstants.SMALL_FONT);
+        statsLabel.setForeground(UIConstants.TEXT_SECONDARY);
+
+        JLabel helpLabel = UIConstants.createStyledLabel("💡 Double-click to edit • Use search to filter", UIConstants.SMALL_FONT);
+        helpLabel.setForeground(UIConstants.TEXT_SECONDARY);
+
+        panel.add(statsLabel);
+        panel.add(Box.createHorizontalStrut(20));
+        panel.add(helpLabel);
+
+        return panel;
+    }
+
+    private void styleButton(JButton button, String text, Color color) {
+        button.setText(text);
+        button.setFont(new Font("Arial", Font.BOLD, 16)); // MUCH LARGER and bold font
+        button.setForeground(Color.BLACK); // BLACK text for maximum contrast
+        button.setBackground(color);
+
+        // Enhanced border with BLACK outline for maximum visibility
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.BLACK, 3), // BLACK border for maximum contrast
+                BorderFactory.createLineBorder(Color.WHITE, 2) // WHITE inner border
+            ),
+            BorderFactory.createEmptyBorder(10, 20, 10, 20) // Even more padding
+        ));
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set MUCH LARGER size for maximum visibility
+        button.setPreferredSize(new Dimension(180, 50)); // MUCH LARGER buttons
+        button.setMinimumSize(new Dimension(180, 50));
+
+        // Enhanced hover effect with better contrast
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(color.brighter());
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.BLACK, 4), // Even thicker BLACK border on hover
+                        BorderFactory.createLineBorder(Color.YELLOW, 2) // YELLOW inner border on hover for extra visibility
+                    ),
+                    BorderFactory.createEmptyBorder(10, 20, 10, 20)
+                ));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(color);
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.BLACK, 3), // BLACK border
+                        BorderFactory.createLineBorder(Color.WHITE, 2) // WHITE inner border
+                    ),
+                    BorderFactory.createEmptyBorder(10, 20, 10, 20)
+                ));
+            }
+        });
     }
 
     private JPanel createInfoPanel() {
@@ -241,5 +369,33 @@ public class ArtistPanel extends JPanel implements RefreshablePanel {
             parent = parent.getParent();
         }
         return (JFrame) parent;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Enable anti-aliasing for smooth gradients
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Create beautiful gradient background for Artist panel
+        GradientPaint gradient = new GradientPaint(
+            0, 0, new Color(25, 25, 112, 50),           // Dark blue with transparency
+            getWidth(), getHeight(), new Color(138, 43, 226, 30)  // Purple with transparency
+        );
+
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Add subtle pattern overlay
+        g2d.setColor(new Color(255, 255, 255, 10));
+        for (int i = 0; i < getWidth(); i += 40) {
+            for (int j = 0; j < getHeight(); j += 40) {
+                g2d.fillOval(i, j, 3, 3);
+            }
+        }
+
+        g2d.dispose();
     }
 }

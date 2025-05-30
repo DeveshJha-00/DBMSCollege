@@ -56,33 +56,100 @@ public class MainWindow extends JFrame {
         relationshipPanel = new RelationshipPanel(musicService);
         searchPanel = new SearchPanel(musicService);
 
-        // Add panels to tabbed pane with icons
-        tabbedPane.addTab("Artists", IconManager.getIcon("artist"), artistPanel, "Manage Artists");
-        tabbedPane.addTab("Albums", IconManager.getIcon("album"), albumPanel, "Manage Albums");
-        tabbedPane.addTab("Songs", IconManager.getIcon("song"), songPanel, "Manage Songs");
-        tabbedPane.addTab("Genres", IconManager.getIcon("genre"), genrePanel, "Manage Genres");
-        tabbedPane.addTab("Awards", IconManager.getIcon("award"), awardPanel, "Manage Awards");
-        tabbedPane.addTab("Relationships", IconManager.getIcon("relationship"), relationshipPanel, "Manage Relationships");
-        tabbedPane.addTab("Search", IconManager.getIcon("search"), searchPanel, "Search and Browse");
+        // Add panels to tabbed pane with beautiful icons
+        int iconSize = 20; // Larger icons for better visibility
+        tabbedPane.addTab("🎤 Artists", IconManager.getIcon("artist", iconSize, UIConstants.PRIMARY_COLOR),
+                         artistPanel, "Manage Artists - Add, edit, and view artist information");
+        tabbedPane.addTab("💿 Albums", IconManager.getIcon("album", iconSize, UIConstants.PRIMARY_COLOR),
+                         albumPanel, "Manage Albums - Organize music albums and track listings");
+        tabbedPane.addTab("🎵 Songs", IconManager.getIcon("song", iconSize, UIConstants.PRIMARY_COLOR),
+                         songPanel, "Manage Songs - Individual track management and details");
+        tabbedPane.addTab("🎭 Genres", IconManager.getIcon("genre", iconSize, UIConstants.PRIMARY_COLOR),
+                         genrePanel, "Manage Genres - Music categories and classifications");
+        tabbedPane.addTab("🏆 Awards", IconManager.getIcon("award", iconSize, UIConstants.PRIMARY_COLOR),
+                         awardPanel, "Manage Awards - Recognition and achievements");
+        tabbedPane.addTab("🔗 Relationships", IconManager.getIcon("relationship", iconSize, UIConstants.PRIMARY_COLOR),
+                         relationshipPanel, "Manage Relationships - Connect artists, songs, albums, and more");
+        tabbedPane.addTab("🔍 Search", IconManager.getIcon("search", iconSize, UIConstants.PRIMARY_COLOR),
+                         searchPanel, "Search and Browse - Powerful search and discovery tools");
     }
 
     private void setupLayout() {
         setLayout(new BorderLayout());
 
+        // Set beautiful background
+        getContentPane().setBackground(UIConstants.BACKGROUND_COLOR);
+
         // Create menu bar
         JMenuBar menuBar = createMenuBar();
         setJMenuBar(menuBar);
 
-        // Create toolbar
-        JToolBar toolBar = createToolBar();
-        add(toolBar, BorderLayout.NORTH);
+        // Create beautiful header with gradient
+        JPanel headerPanel = createBeautifulHeader();
+        add(headerPanel, BorderLayout.NORTH);
 
-        // Add main content
-        add(tabbedPane, BorderLayout.CENTER);
+        // Create main content panel with card styling
+        JPanel mainContentPanel = createMainContentPanel();
+        add(mainContentPanel, BorderLayout.CENTER);
 
         // Create status bar
         JPanel statusBar = createStatusBar();
         add(statusBar, BorderLayout.SOUTH);
+    }
+
+    private JPanel createBeautifulHeader() {
+        JPanel headerPanel = UIConstants.createHeaderPanel();
+        headerPanel.setLayout(new BorderLayout());
+
+        // Title section
+        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        titlePanel.setOpaque(false);
+
+        JLabel titleLabel = UIConstants.createTitleLabel("🎵 Music Database Management System");
+        JLabel subtitleLabel = UIConstants.createSubtitleLabel("Comprehensive music collection management");
+
+        JPanel titleContainer = new JPanel(new BorderLayout());
+        titleContainer.setOpaque(false);
+        titleContainer.add(titleLabel, BorderLayout.NORTH);
+        titleContainer.add(subtitleLabel, BorderLayout.CENTER);
+
+        titlePanel.add(titleContainer);
+
+        // Toolbar section
+        JToolBar toolBar = createEnhancedToolBar();
+        toolBar.setOpaque(false);
+        toolBar.setFloatable(false);
+        toolBar.setBorder(BorderFactory.createEmptyBorder());
+
+        headerPanel.add(titlePanel, BorderLayout.WEST);
+        headerPanel.add(toolBar, BorderLayout.EAST);
+
+        return headerPanel;
+    }
+
+    private JPanel createMainContentPanel() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(UIConstants.BACKGROUND_COLOR);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+
+        // Enhanced tabbed pane styling with beautiful appearance
+        tabbedPane.setBackground(UIConstants.CARD_BACKGROUND);
+        tabbedPane.setBorder(BorderFactory.createEmptyBorder());
+        tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+
+        // Enhance tab appearance
+        tabbedPane.setTabPlacement(JTabbedPane.TOP);
+        tabbedPane.putClientProperty("JTabbedPane.tabAreaBackground", UIConstants.BACKGROUND_COLOR);
+        tabbedPane.putClientProperty("JTabbedPane.selectedTabPadInsets", new Insets(2, 8, 2, 8));
+        tabbedPane.putClientProperty("JTabbedPane.tabInsets", new Insets(4, 12, 4, 12));
+
+        // Create a card container for the tabbed pane
+        JPanel cardContainer = UIConstants.createCardPanel();
+        cardContainer.setLayout(new BorderLayout());
+        cardContainer.add(tabbedPane, BorderLayout.CENTER);
+
+        mainPanel.add(cardContainer, BorderLayout.CENTER);
+        return mainPanel;
     }
 
     private JMenuBar createMenuBar() {
@@ -146,21 +213,37 @@ public class MainWindow extends JFrame {
         return menuBar;
     }
 
-    private JToolBar createToolBar() {
+    private JToolBar createEnhancedToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
+        toolBar.setOpaque(false);
+        toolBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.setToolTipText("Refresh all data");
+        // Create beautiful buttons with icons
+        JButton refreshButton = UIConstants.createSecondaryButton("🔄 Refresh");
+        refreshButton.setToolTipText("Refresh all data (F5)");
+        refreshButton.setForeground(UIConstants.TEXT_ON_PRIMARY);
+        refreshButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
         refreshButton.addActionListener(e -> refreshAllPanels());
 
-        JButton searchButton = new JButton("Search");
-        searchButton.setToolTipText("Open search panel");
+        JButton searchButton = UIConstants.createSecondaryButton("🔍 Search");
+        searchButton.setToolTipText("Open search panel (Ctrl+F)");
+        searchButton.setForeground(UIConstants.TEXT_ON_PRIMARY);
+        searchButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
         searchButton.addActionListener(e -> tabbedPane.setSelectedIndex(6));
 
+        JButton aboutButton = UIConstants.createSecondaryButton("ℹ️ About");
+        aboutButton.setToolTipText("About this application");
+        aboutButton.setForeground(UIConstants.TEXT_ON_PRIMARY);
+        aboutButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
+        aboutButton.addActionListener(e -> showAboutDialog());
+
+        toolBar.add(Box.createHorizontalGlue()); // Push buttons to the right
         toolBar.add(refreshButton);
-        toolBar.addSeparator();
+        toolBar.add(Box.createHorizontalStrut(5));
         toolBar.add(searchButton);
+        toolBar.add(Box.createHorizontalStrut(5));
+        toolBar.add(aboutButton);
 
         return toolBar;
     }

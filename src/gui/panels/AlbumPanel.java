@@ -1,17 +1,19 @@
 package gui.panels;
 
-import service.MusicService;
-import model.Album;
 import gui.MainWindow.RefreshablePanel;
 import gui.dialogs.AlbumDialog;
 import gui.models.AlbumTableModel;
-
-import javax.swing.*;
-import javax.swing.table.TableRowSorter;
+import gui.utils.BeautifulPanel;
+import gui.utils.LayoutHelper;
+import gui.utils.UIConstants;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.table.TableRowSorter;
+import model.Album;
+import service.MusicService;
 
 /**
  * Panel for managing albums in the music database
@@ -66,36 +68,163 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
     private void setupLayout() {
         setLayout(new BorderLayout());
 
-        // Create top panel with search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout());
+        // Add beautiful gradient background for Album panel
+        setBackground(UIConstants.BACKGROUND_COLOR);
+        setOpaque(false); // Make transparent to show custom background
 
-        // Search panel
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.add(new JLabel("Search:"));
+        // Create beautiful header with gradient using BeautifulPanel (same as Artist/Search)
+        BeautifulPanel headerPanel = BeautifulPanel.createHeaderPanel(
+            "💿 Album Management",
+            "Manage your music albums - organize collections and track listings"
+        );
+
+        // Create main content area using LayoutHelper
+        JPanel mainContentPanel = LayoutHelper.createContentArea();
+
+        // Create compact search and button panel
+        JPanel controlPanel = createCompactControlPanel();
+
+        // Create enhanced table panel
+        JPanel tablePanel = createEnhancedTablePanel();
+
+        // Layout main content with minimal spacing
+        mainContentPanel.add(controlPanel, BorderLayout.NORTH);
+        mainContentPanel.add(tablePanel, BorderLayout.CENTER);
+
+        // Add components to main panel
+        add(headerPanel, BorderLayout.NORTH);
+        add(mainContentPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createCompactControlPanel() {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // Search section
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        searchPanel.setOpaque(false);
+
+        JLabel searchLabel = UIConstants.createStyledLabel("🔍 Search Albums:", UIConstants.SUBTITLE_FONT);
+        searchLabel.setForeground(UIConstants.PRIMARY_COLOR);
+        searchField.setPreferredSize(new Dimension(200, 28));
+
+        searchPanel.add(searchLabel);
+        searchPanel.add(Box.createHorizontalStrut(8));
         searchPanel.add(searchField);
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // Button section with beautiful styling
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        buttonPanel.setOpaque(false);
+
+        // Style buttons with EXTREMELY VISIBLE colors
+        styleButton(addButton, "➕ Add Album", new Color(0, 255, 0));       // NEON GREEN
+        styleButton(editButton, "✏️ Edit", new Color(0, 150, 255));         // ELECTRIC BLUE
+        styleButton(deleteButton, "🗑️ Delete", new Color(255, 0, 0));       // PURE RED
+        styleButton(viewSongsButton, "👁️ View Songs", new Color(255, 165, 0)); // BRIGHT ORANGE
+        styleButton(refreshButton, "🔄 Refresh", new Color(255, 0, 255));    // MAGENTA
+
         buttonPanel.add(addButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(viewSongsButton);
         buttonPanel.add(refreshButton);
 
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
+        panel.add(searchPanel, BorderLayout.WEST);
+        panel.add(buttonPanel, BorderLayout.EAST);
 
-        // Create table panel with scroll pane
-        JScrollPane scrollPane = new JScrollPane(albumTable);
-        scrollPane.setPreferredSize(new Dimension(800, 400));
+        return panel;
+    }
 
-        // Create info panel
-        JPanel infoPanel = createInfoPanel();
+    private JPanel createEnhancedTablePanel() {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        // Add components to main panel
-        add(topPanel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
-        add(infoPanel, BorderLayout.SOUTH);
+        // Apply modern table styling
+        UIConstants.applyModernTableStyling(albumTable);
+
+        // Create scroll pane with no extra space
+        JScrollPane scrollPane = UIConstants.createStyledScrollPane(albumTable);
+        scrollPane.setBorder(BorderFactory.createLineBorder(UIConstants.PRIMARY_LIGHT, 1));
+
+        // Add quick stats panel
+        JPanel statsPanel = createQuickStatsPanel();
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(statsPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel createQuickStatsPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        panel.setBackground(new Color(248, 249, 250));
+        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIConstants.PRIMARY_LIGHT));
+
+        JLabel statsLabel = UIConstants.createStyledLabel("📊 Albums: 0 | Selected: None", UIConstants.SMALL_FONT);
+        statsLabel.setForeground(UIConstants.TEXT_SECONDARY);
+
+        JLabel helpLabel = UIConstants.createStyledLabel("💡 Double-click to edit • View Songs to see tracks", UIConstants.SMALL_FONT);
+        helpLabel.setForeground(UIConstants.TEXT_SECONDARY);
+
+        panel.add(statsLabel);
+        panel.add(Box.createHorizontalStrut(20));
+        panel.add(helpLabel);
+
+        return panel;
+    }
+
+    private void styleButton(JButton button, String text, Color color) {
+        button.setText(text);
+        button.setFont(new Font("Arial", Font.BOLD, 16)); // MUCH LARGER and bold font
+        button.setForeground(Color.BLACK); // BLACK text for maximum contrast
+        button.setBackground(color);
+
+        // Enhanced border with shadow effect for better visibility
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(color.darker().darker(), 2), // Thicker, darker border
+                BorderFactory.createLineBorder(color.brighter(), 1) // Inner bright border
+            ),
+            BorderFactory.createEmptyBorder(8, 16, 8, 16) // More padding
+        ));
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set MUCH LARGER size for maximum visibility
+        button.setPreferredSize(new Dimension(180, 50)); // MUCH LARGER buttons
+        button.setMinimumSize(new Dimension(180, 50));
+
+        // Enhanced hover effect with better contrast
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(color.brighter());
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(color.darker().darker(), 3), // Even thicker on hover
+                        BorderFactory.createLineBorder(Color.WHITE, 1) // White inner border on hover
+                    ),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                ));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(color);
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(color.darker().darker(), 2),
+                        BorderFactory.createLineBorder(color.brighter(), 1)
+                    ),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                ));
+            }
+        });
     }
 
     private JPanel createInfoPanel() {
@@ -289,5 +418,38 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
             parent = parent.getParent();
         }
         return (JFrame) parent;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Enable anti-aliasing for smooth gradients
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Create vinyl record themed background for Album panel
+        GradientPaint gradient = new GradientPaint(
+            0, 0, new Color(139, 69, 19, 40),           // Brown with transparency (vinyl color)
+            getWidth(), getHeight(), new Color(205, 133, 63, 25)  // Peru with transparency
+        );
+
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Add vinyl record circles pattern
+        g2d.setStroke(new BasicStroke(2));
+        g2d.setColor(new Color(139, 69, 19, 30));
+        for (int i = 100; i < getWidth(); i += 200) {
+            for (int j = 100; j < getHeight(); j += 200) {
+                // Draw vinyl record circles
+                g2d.drawOval(i - 40, j - 40, 80, 80);
+                g2d.drawOval(i - 25, j - 25, 50, 50);
+                g2d.drawOval(i - 10, j - 10, 20, 20);
+                g2d.fillOval(i - 3, j - 3, 6, 6); // Center hole
+            }
+        }
+
+        g2d.dispose();
     }
 }

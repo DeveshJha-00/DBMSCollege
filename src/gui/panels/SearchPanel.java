@@ -4,8 +4,11 @@ import service.MusicService;
 import gui.MainWindow.RefreshablePanel;
 import gui.utils.UIConstants;
 import gui.utils.IconManager;
+import gui.utils.BeautifulPanel;
+import gui.utils.LayoutHelper;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,96 +55,205 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         searchButton = new JButton("Search");
         clearButton = new JButton("Clear");
 
-        advancedSearchButton = UIConstants.createSecondaryButton("Advanced Search Options", true);
-        advancedSearchButton.setIcon(IconManager.getIcon("settings", 16, UIConstants.TEXT_PRIMARY));
+        // Create highly visible buttons with neon styling
+        advancedSearchButton = createNeonButton("🔧 Advanced Search", new Color(255, 0, 255)); // MAGENTA
         advancedSearchButton.setToolTipText("Advanced search options");
 
-        browseButton = UIConstants.createSecondaryButton("Browse", true);
-        browseButton.setIcon(IconManager.getIcon("folder", 16, UIConstants.TEXT_PRIMARY));
+        browseButton = createNeonButton("📂 Browse Categories", new Color(0, 150, 255)); // ELECTRIC BLUE
         browseButton.setToolTipText("Browse by category");
 
-        statisticsButton = UIConstants.createSecondaryButton("View Data Statistics", true);
-        statisticsButton.setIcon(IconManager.getIcon("chart", 16, UIConstants.TEXT_PRIMARY));
+        statisticsButton = createNeonButton("📈 Database Statistics", new Color(255, 165, 0)); // BRIGHT ORANGE
         statisticsButton.setToolTipText("View database statistics");
     }
 
     private void setupLayout() {
         setLayout(new BorderLayout());
+        setBackground(UIConstants.BACKGROUND_COLOR);
 
-        // Create header panel
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        headerPanel.setBorder(UIConstants.PANEL_BORDER);
+        // Create beautiful header with gradient using BeautifulPanel
+        BeautifulPanel headerPanel = BeautifulPanel.createHeaderPanel(
+            "🔍 Search & Browse",
+            "Discover music across all categories with powerful search tools"
+        );
 
-        JLabel titleLabel = UIConstants.createStyledLabel("Advanced Search", UIConstants.TITLE_FONT);
-        JLabel subtitleLabel = UIConstants.createStyledLabel(
-            "Search across all entities in the music database",
-            UIConstants.BODY_FONT);
-        subtitleLabel.setForeground(UIConstants.TEXT_SECONDARY);
+        // Create main content area
+        JPanel mainContentPanel = new JPanel(new BorderLayout());
+        mainContentPanel.setBackground(UIConstants.BACKGROUND_COLOR);
+        mainContentPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        titlePanel.add(titleLabel, BorderLayout.NORTH);
-        titlePanel.add(subtitleLabel, BorderLayout.CENTER);
+        // Create search card
+        JPanel searchCard = UIConstants.createCardPanel();
+        searchCard.setLayout(new BorderLayout());
 
-        headerPanel.add(titlePanel, BorderLayout.WEST);
+        // Search controls
+        JPanel searchControlsPanel = createSearchControlsPanel();
+        searchCard.add(searchControlsPanel, BorderLayout.NORTH);
 
-        // Create search panel
-        JPanel searchPanel = new JPanel(new GridBagLayout());
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.setBorder(UIConstants.PANEL_BORDER);
+        // Advanced features panel
+        JPanel advancedPanel = createAdvancedFeaturesPanel();
+        searchCard.add(advancedPanel, BorderLayout.CENTER);
+
+        // Create results card
+        JPanel resultsCard = UIConstants.createCardPanel();
+        resultsCard.setLayout(new BorderLayout());
+
+        JLabel resultsLabel = UIConstants.createStyledLabel("📊 Search Results", UIConstants.SUBTITLE_FONT);
+        resultsLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        resultsCard.add(resultsLabel, BorderLayout.NORTH);
+
+        JScrollPane scrollPane = UIConstants.createStyledScrollPane(resultsArea);
+        scrollPane.setPreferredSize(new Dimension(700, 350));
+        resultsCard.add(scrollPane, BorderLayout.CENTER);
+
+        // Layout main content
+        JPanel contentContainer = new JPanel(new BorderLayout());
+        contentContainer.setBackground(UIConstants.BACKGROUND_COLOR);
+        contentContainer.add(searchCard, BorderLayout.NORTH);
+        contentContainer.add(Box.createVerticalStrut(15), BorderLayout.CENTER);
+        contentContainer.add(resultsCard, BorderLayout.SOUTH);
+
+        mainContentPanel.add(contentContainer, BorderLayout.CENTER);
+
+        // Add components to main panel
+        add(headerPanel, BorderLayout.NORTH);
+        add(mainContentPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createSearchControlsPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBackground(UIConstants.CARD_BACKGROUND);
+        panel.setBorder(BorderFactory.createTitledBorder(
+            BorderFactory.createLineBorder(UIConstants.PRIMARY_LIGHT, 1),
+            "🎯 Quick Search",
+            0, 0,
+            UIConstants.SUBTITLE_FONT,
+            UIConstants.PRIMARY_COLOR
+        ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(UIConstants.COMPONENT_SPACING, UIConstants.COMPONENT_SPACING,
-                               UIConstants.COMPONENT_SPACING, UIConstants.COMPONENT_SPACING);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
 
         // Search type
         gbc.gridx = 0; gbc.gridy = 0;
-        searchPanel.add(new JLabel("Search in:"), gbc);
-
+        panel.add(UIConstants.createStyledLabel("Search in:", UIConstants.SUBTITLE_FONT), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 0.3;
-        searchPanel.add(searchTypeCombo, gbc);
+        panel.add(searchTypeCombo, gbc);
 
         // Search field
-        gbc.gridx = 2; gbc.weightx = 0.7;
-        searchPanel.add(searchField, gbc);
+        gbc.gridx = 2; gbc.weightx = 0.5;
+        panel.add(searchField, gbc);
 
         // Buttons
         gbc.gridx = 3; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
-        searchPanel.add(searchButton, gbc);
+        panel.add(searchButton, gbc);
 
         gbc.gridx = 4;
-        searchPanel.add(clearButton, gbc);
+        panel.add(clearButton, gbc);
 
-        // Create additional button panel for advanced features
-        JPanel advancedButtonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        advancedButtonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        advancedButtonPanel.add(advancedSearchButton);
-        advancedButtonPanel.add(browseButton);
-        advancedButtonPanel.add(statisticsButton);
-
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 5; gbc.fill = GridBagConstraints.HORIZONTAL;
-        searchPanel.add(advancedButtonPanel, gbc);
-
-        // Create results panel
-        JPanel resultsPanel = new JPanel(new BorderLayout());
-        resultsPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        resultsPanel.setBorder(UIConstants.TITLED_BORDER);
-
-        JLabel resultsLabel = UIConstants.createStyledLabel("Search Results:", UIConstants.SUBTITLE_FONT);
-        resultsPanel.add(resultsLabel, BorderLayout.NORTH);
-
-        JScrollPane scrollPane = new JScrollPane(resultsArea);
-        scrollPane.setPreferredSize(new Dimension(600, 300));
-        scrollPane.setBorder(BorderFactory.createLoweredBevelBorder());
-        resultsPanel.add(scrollPane, BorderLayout.CENTER);
-
-        // Add components to main panel
-        add(headerPanel, BorderLayout.NORTH);
-        add(searchPanel, BorderLayout.CENTER);
-        add(resultsPanel, BorderLayout.SOUTH);
+        return panel;
     }
+
+    private JPanel createAdvancedFeaturesPanel() {
+        JPanel panel = LayoutHelper.createThreeColumnLayout(
+            createBeautifulFeatureCard("🔧", "Advanced Search",
+                "Duration ranges, birth years, multi-criteria search", advancedSearchButton),
+            createBeautifulFeatureCard("📂", "Browse Categories",
+                "Explore by genre, year, country, or album", browseButton),
+            createBeautifulFeatureCard("📈", "Database Statistics",
+                "View comprehensive database analytics", statisticsButton)
+        );
+        panel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+        return panel;
+    }
+
+    private BeautifulPanel createBeautifulFeatureCard(String icon, String title, String description, JButton button) {
+        BeautifulPanel card = BeautifulPanel.createFeatureCard(icon, title, description);
+
+        // Add the button at the bottom
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setOpaque(false);
+        buttonPanel.add(button);
+
+        card.add(buttonPanel, BorderLayout.SOUTH);
+
+        // SIMPLE and RELIABLE hover effect - only on the card, not conflicting with button
+        addSimpleCardHover(card);
+
+        return card;
+    }
+
+    private void addSimpleCardHover(BeautifulPanel card) {
+        // Store original appearance
+        final Color originalBackground = card.getBackground();
+        final Border originalBorder = card.getBorder();
+
+        // Create simple, reliable hover effect
+        card.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                // Simple purple glow effect
+                card.setBackground(new Color(138, 43, 226, 40));
+                card.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(138, 43, 226), 3),
+                    BorderFactory.createEmptyBorder(12, 12, 12, 12)
+                ));
+                card.repaint();
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                // Reset to original
+                card.setBackground(originalBackground);
+                card.setBorder(originalBorder);
+                card.repaint();
+            }
+        });
+    }
+
+    private JButton createNeonButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 14)); // Larger and bold font
+        button.setForeground(Color.BLACK); // BLACK text for maximum contrast
+        button.setBackground(color);
+
+        // Enhanced border with BLACK outline for maximum visibility
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.BLACK, 2), // BLACK border for maximum contrast
+                BorderFactory.createLineBorder(Color.WHITE, 1) // WHITE inner border
+            ),
+            BorderFactory.createEmptyBorder(8, 16, 8, 16) // Padding
+        ));
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set larger size for better visibility
+        button.setPreferredSize(new Dimension(200, 40)); // Larger buttons
+        button.setMinimumSize(new Dimension(200, 40));
+
+        // SIMPLE button hover effect that doesn't conflict with card hover
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                // Simple brightness increase
+                button.setBackground(color.brighter().brighter());
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                // Reset to original color
+                button.setBackground(color);
+            }
+        });
+
+        return button;
+    }
+
+
 
     private void setupEventHandlers() {
         // Search button action

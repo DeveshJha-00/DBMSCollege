@@ -9,7 +9,9 @@ import gui.models.AlbumSongTableModel;
 import gui.models.ArtistAwardTableModel;
 import gui.models.PerformanceTableModel;
 import gui.models.SongGenreTableModel;
+import gui.utils.BeautifulPanel;
 import gui.utils.IconManager;
+import gui.utils.LayoutHelper;
 import gui.utils.UIConstants;
 import java.awt.*;
 import javax.swing.*;
@@ -86,211 +88,172 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
     private void setupLayout() {
         setLayout(new BorderLayout());
 
-        // Create header panel
-        JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        headerPanel.setBorder(UIConstants.PANEL_BORDER);
+        // Add beautiful gradient background for Relationship panel
+        setBackground(UIConstants.BACKGROUND_COLOR);
+        setOpaque(false); // Make transparent to show custom background
 
-        JLabel titleLabel = UIConstants.createStyledLabel("Relationship Management", UIConstants.TITLE_FONT);
-        JLabel subtitleLabel = UIConstants.createStyledLabel(
-            "Manage connections between artists, albums, songs, genres, and awards",
-            UIConstants.BODY_FONT);
-        subtitleLabel.setForeground(UIConstants.TEXT_SECONDARY);
+        // Create beautiful header with gradient (exactly like ArtistPanel)
+        BeautifulPanel headerPanel = BeautifulPanel.createHeaderPanel(
+            "🔗 Relationship Management",
+            "Manage connections between artists, albums, songs, genres, and awards"
+        );
 
-        JPanel titlePanel = new JPanel(new BorderLayout());
-        titlePanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        titlePanel.add(titleLabel, BorderLayout.NORTH);
-        titlePanel.add(subtitleLabel, BorderLayout.CENTER);
+        // Create main content area (exactly like ArtistPanel)
+        JPanel mainContentPanel = LayoutHelper.createContentArea();
 
-        headerPanel.add(titlePanel, BorderLayout.WEST);
+        // Enhanced tabbed pane styling with beautiful colors
+        relationshipTabs.setBackground(UIConstants.CARD_BACKGROUND);
+        relationshipTabs.setBorder(BorderFactory.createEmptyBorder());
+        relationshipTabs.setForeground(UIConstants.PRIMARY_COLOR);
 
-        // Add components to main panel
+        // Create a beautiful card container for the tabbed pane (using BeautifulPanel)
+        BeautifulPanel cardContainer = BeautifulPanel.createContentCard();
+        cardContainer.setLayout(new BorderLayout());
+        cardContainer.add(relationshipTabs, BorderLayout.CENTER);
+
+        mainContentPanel.add(cardContainer, BorderLayout.CENTER);
+
+        // Add components to main panel (exactly like ArtistPanel)
         add(headerPanel, BorderLayout.NORTH);
-        add(relationshipTabs, BorderLayout.CENTER);
+        add(mainContentPanel, BorderLayout.CENTER);
     }
 
     private JPanel createArtistSongPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UIConstants.PANEL_BACKGROUND);
+        panel.setBackground(UIConstants.BACKGROUND_COLOR);
 
         // Initialize components
         performanceTableModel = new PerformanceTableModel(musicService);
         performanceTable = new JTable(performanceTableModel);
         performanceTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Configure table appearance
-        UIConstants.configureTable(performanceTable);
+        // Configure table appearance with modern styling
+        UIConstants.applyModernTableStyling(performanceTable);
         performanceTable.setRowSorter(new TableRowSorter<>(performanceTableModel));
 
         performanceSearchField = new JTextField(20);
         performanceSearchField.setToolTipText("Search performances...");
+        performanceSearchField.setPreferredSize(new Dimension(200, 28));
 
-        addPerformanceButton = new JButton("Add Performance");
-        removePerformanceButton = new JButton("Remove");
+        // Create beautiful styled buttons with HIGHLY VISIBLE colors
+        addPerformanceButton = createStyledButton("➕ Add Performance", new Color(0, 150, 0));  // Bright Green
+        removePerformanceButton = createStyledButton("🗑️ Remove", new Color(200, 0, 0));        // Bright Red
         removePerformanceButton.setEnabled(false);
 
-        // Create top panel with search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        // Create beautiful control panel
+        JPanel controlPanel = createBeautifulControlPanel("🔍 Search Performances:", performanceSearchField,
+                                                         addPerformanceButton, removePerformanceButton);
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.add(new JLabel("Search:"));
-        searchPanel.add(performanceSearchField);
+        // Create enhanced table panel
+        JPanel tablePanel = createBeautifulTablePanel(performanceTable, "📊 Performances: 0 | Selected: None");
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        buttonPanel.add(addPerformanceButton);
-        buttonPanel.add(removePerformanceButton);
-
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
-
-        // Create table panel
-        JScrollPane scrollPane = new JScrollPane(performanceTable);
-        scrollPane.setPreferredSize(new Dimension(600, 300));
-
-        panel.add(topPanel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(controlPanel, BorderLayout.NORTH);
+        panel.add(tablePanel, BorderLayout.CENTER);
 
         return panel;
     }
 
     private JPanel createAlbumSongPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UIConstants.PANEL_BACKGROUND);
+        panel.setBackground(UIConstants.BACKGROUND_COLOR);
 
         // Initialize components
         albumSongTableModel = new AlbumSongTableModel(musicService);
         albumSongTable = new JTable(albumSongTableModel);
         albumSongTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Configure table appearance
-        UIConstants.configureTable(albumSongTable);
+        // Configure table appearance with modern styling
+        UIConstants.applyModernTableStyling(albumSongTable);
         albumSongTable.setRowSorter(new TableRowSorter<>(albumSongTableModel));
 
         albumSongSearchField = new JTextField(20);
         albumSongSearchField.setToolTipText("Search album songs...");
+        albumSongSearchField.setPreferredSize(new Dimension(200, 28));
 
-        addAlbumSongButton = new JButton("Add Song to Album");
-        removeAlbumSongButton = new JButton("Remove");
+        // Create beautiful styled buttons with HIGHLY VISIBLE colors
+        addAlbumSongButton = createStyledButton("➕ Add Song to Album", new Color(0, 150, 0));  // Bright Green
+        removeAlbumSongButton = createStyledButton("🗑️ Remove", new Color(200, 0, 0));         // Bright Red
         removeAlbumSongButton.setEnabled(false);
 
-        // Create top panel with search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        // Create beautiful control panel
+        JPanel controlPanel = createBeautifulControlPanel("🔍 Search Album Songs:", albumSongSearchField,
+                                                         addAlbumSongButton, removeAlbumSongButton);
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.BODY_FONT));
-        searchPanel.add(albumSongSearchField);
+        // Create enhanced table panel
+        JPanel tablePanel = createBeautifulTablePanel(albumSongTable, "📊 Album Songs: 0 | Selected: None");
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        buttonPanel.add(addAlbumSongButton);
-        buttonPanel.add(removeAlbumSongButton);
-
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
-
-        // Create table panel
-        JScrollPane scrollPane = new JScrollPane(albumSongTable);
-        scrollPane.setPreferredSize(new Dimension(600, 300));
-
-        panel.add(topPanel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(controlPanel, BorderLayout.NORTH);
+        panel.add(tablePanel, BorderLayout.CENTER);
 
         return panel;
     }
 
     private JPanel createArtistAwardPanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UIConstants.PANEL_BACKGROUND);
+        panel.setBackground(UIConstants.BACKGROUND_COLOR);
 
         // Initialize components
         artistAwardTableModel = new ArtistAwardTableModel(musicService);
         artistAwardTable = new JTable(artistAwardTableModel);
         artistAwardTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Configure table appearance
-        UIConstants.configureTable(artistAwardTable);
+        // Configure table appearance with modern styling
+        UIConstants.applyModernTableStyling(artistAwardTable);
         artistAwardTable.setRowSorter(new TableRowSorter<>(artistAwardTableModel));
 
         artistAwardSearchField = new JTextField(20);
         artistAwardSearchField.setToolTipText("Search artist awards...");
+        artistAwardSearchField.setPreferredSize(new Dimension(200, 28));
 
-        addArtistAwardButton = new JButton("Add Award");
-        removeArtistAwardButton = new JButton("Remove");
+        // Create beautiful styled buttons with HIGHLY VISIBLE colors
+        addArtistAwardButton = createStyledButton("➕ Add Award", new Color(0, 150, 0));       // Bright Green
+        removeArtistAwardButton = createStyledButton("🗑️ Remove", new Color(200, 0, 0));      // Bright Red
         removeArtistAwardButton.setEnabled(false);
 
-        // Create top panel with search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        // Create beautiful control panel
+        JPanel controlPanel = createBeautifulControlPanel("🔍 Search Artist Awards:", artistAwardSearchField,
+                                                         addArtistAwardButton, removeArtistAwardButton);
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        searchPanel.add(UIConstants.createStyledLabel("Search:", UIConstants.BODY_FONT));
-        searchPanel.add(artistAwardSearchField);
+        // Create enhanced table panel
+        JPanel tablePanel = createBeautifulTablePanel(artistAwardTable, "📊 Artist Awards: 0 | Selected: None");
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        buttonPanel.add(addArtistAwardButton);
-        buttonPanel.add(removeArtistAwardButton);
-
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
-
-        // Create table panel
-        JScrollPane scrollPane = new JScrollPane(artistAwardTable);
-        scrollPane.setPreferredSize(new Dimension(600, 300));
-
-        panel.add(topPanel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(controlPanel, BorderLayout.NORTH);
+        panel.add(tablePanel, BorderLayout.CENTER);
 
         return panel;
     }
 
     private JPanel createSongGenrePanel() {
         JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(UIConstants.PANEL_BACKGROUND);
+        panel.setBackground(UIConstants.BACKGROUND_COLOR);
 
         // Initialize components
         songGenreTableModel = new SongGenreTableModel(musicService);
         songGenreTable = new JTable(songGenreTableModel);
         songGenreTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        // Configure table appearance
-        UIConstants.configureTable(songGenreTable);
+        // Configure table appearance with modern styling
+        UIConstants.applyModernTableStyling(songGenreTable);
         songGenreTable.setRowSorter(new TableRowSorter<>(songGenreTableModel));
 
         songGenreSearchField = new JTextField(20);
         songGenreSearchField.setToolTipText("Search song genres...");
+        songGenreSearchField.setPreferredSize(new Dimension(200, 28));
 
-        addSongGenreButton = new JButton("Add Genre");
-        removeSongGenreButton = new JButton("Remove");
+        // Create beautiful styled buttons with HIGHLY VISIBLE colors
+        addSongGenreButton = createStyledButton("➕ Add Genre", new Color(0, 150, 0));         // Bright Green
+        removeSongGenreButton = createStyledButton("🗑️ Remove", new Color(200, 0, 0));        // Bright Red
         removeSongGenreButton.setEnabled(false);
 
-        // Create top panel with search and buttons
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        // Create beautiful control panel
+        JPanel controlPanel = createBeautifulControlPanel("🔍 Search Song Genres:", songGenreSearchField,
+                                                         addSongGenreButton, removeSongGenreButton);
 
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.add(new JLabel("Search:"));
-        searchPanel.add(songGenreSearchField);
+        // Create enhanced table panel
+        JPanel tablePanel = createBeautifulTablePanel(songGenreTable, "📊 Song Genres: 0 | Selected: None");
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        buttonPanel.add(addSongGenreButton);
-        buttonPanel.add(removeSongGenreButton);
-
-        topPanel.add(searchPanel, BorderLayout.WEST);
-        topPanel.add(buttonPanel, BorderLayout.EAST);
-
-        // Create table panel
-        JScrollPane scrollPane = new JScrollPane(songGenreTable);
-        scrollPane.setPreferredSize(new Dimension(600, 300));
-
-        panel.add(topPanel, BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(controlPanel, BorderLayout.NORTH);
+        panel.add(tablePanel, BorderLayout.CENTER);
 
         return panel;
     }
@@ -576,5 +539,160 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         if (albumSongTableModel != null) {
             albumSongTableModel.loadData();
         }
+    }
+
+    // Helper methods for beautiful styling
+    private JButton createStyledButton(String text, Color color) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Arial", Font.BOLD, 16)); // MUCH LARGER and bold font
+        button.setForeground(Color.BLACK); // BLACK text for maximum contrast
+        button.setBackground(color);
+
+        // Enhanced border with shadow effect for better visibility
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(color.darker().darker(), 2), // Thicker, darker border
+                BorderFactory.createLineBorder(color.brighter(), 1) // Inner bright border
+            ),
+            BorderFactory.createEmptyBorder(8, 16, 8, 16) // More padding
+        ));
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set MUCH LARGER size for maximum visibility
+        button.setPreferredSize(new Dimension(180, 50)); // MUCH LARGER buttons
+        button.setMinimumSize(new Dimension(180, 50));
+
+        // Enhanced hover effect with better contrast
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(color.brighter());
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(color.darker().darker(), 3), // Even thicker on hover
+                        BorderFactory.createLineBorder(Color.WHITE, 1) // White inner border on hover
+                    ),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                ));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(color);
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(color.darker().darker(), 2),
+                        BorderFactory.createLineBorder(color.brighter(), 1)
+                    ),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                ));
+            }
+        });
+
+        return button;
+    }
+
+    private JPanel createBeautifulControlPanel(String searchLabel, JTextField searchField, JButton... buttons) {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // Search section
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        searchPanel.setOpaque(false);
+
+        JLabel label = UIConstants.createStyledLabel(searchLabel, UIConstants.SUBTITLE_FONT);
+        label.setForeground(UIConstants.PRIMARY_COLOR);
+
+        searchPanel.add(label);
+        searchPanel.add(Box.createHorizontalStrut(8));
+        searchPanel.add(searchField);
+
+        // Button section
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        buttonPanel.setOpaque(false);
+
+        for (JButton button : buttons) {
+            buttonPanel.add(button);
+        }
+
+        panel.add(searchPanel, BorderLayout.WEST);
+        panel.add(buttonPanel, BorderLayout.EAST);
+
+        return panel;
+    }
+
+    private JPanel createBeautifulTablePanel(JTable table, String statsText) {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+
+        // Create scroll pane with beautiful styling
+        JScrollPane scrollPane = UIConstants.createStyledScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createLineBorder(UIConstants.PRIMARY_LIGHT, 1));
+
+        // Add stats panel
+        JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
+        statsPanel.setBackground(new Color(248, 249, 250));
+        statsPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, UIConstants.PRIMARY_LIGHT));
+
+        JLabel statsLabel = UIConstants.createStyledLabel(statsText, UIConstants.SMALL_FONT);
+        statsLabel.setForeground(UIConstants.TEXT_SECONDARY);
+
+        statsPanel.add(statsLabel);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(statsPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Enable anti-aliasing for smooth gradients
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Create network/connection themed background for Relationship panel
+        GradientPaint gradient = new GradientPaint(
+            0, 0, new Color(70, 130, 180, 35),          // Steel blue with transparency
+            getWidth(), getHeight(), new Color(100, 149, 237, 20)  // Cornflower blue with transparency
+        );
+
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Add network connection pattern
+        g2d.setStroke(new BasicStroke(2));
+        g2d.setColor(new Color(70, 130, 180, 40));
+
+        // Draw connection nodes and lines
+        int[][] nodes = {{100, 100}, {300, 150}, {500, 120}, {200, 250}, {400, 280}, {600, 200}};
+
+        // Draw connection lines
+        for (int i = 0; i < nodes.length; i++) {
+            for (int j = i + 1; j < nodes.length; j++) {
+                if (Math.random() > 0.6) { // Random connections
+                    g2d.drawLine(nodes[i][0], nodes[i][1], nodes[j][0], nodes[j][1]);
+                }
+            }
+        }
+
+        // Draw nodes
+        g2d.setColor(new Color(70, 130, 180, 60));
+        for (int[] node : nodes) {
+            g2d.fillOval(node[0] - 8, node[1] - 8, 16, 16);
+            g2d.setColor(new Color(255, 255, 255, 80));
+            g2d.fillOval(node[0] - 4, node[1] - 4, 8, 8);
+            g2d.setColor(new Color(70, 130, 180, 60));
+        }
+
+        g2d.dispose();
     }
 }
