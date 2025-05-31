@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.EnhancedAlbumDialog;
+import gui.dialogs.AlbumDialog;
 import gui.models.AlbumTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -293,7 +293,7 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
     }
 
     private void addAlbum() {
-        EnhancedAlbumDialog dialog = new EnhancedAlbumDialog(getParentFrame(), "Add Album", null, musicService);
+        AlbumDialog dialog = new AlbumDialog(getParentFrame(), "Add Album", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
@@ -310,7 +310,7 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
         int modelRow = albumTable.convertRowIndexToModel(selectedRow);
         Album album = tableModel.getAlbumAt(modelRow);
 
-        EnhancedAlbumDialog dialog = new EnhancedAlbumDialog(getParentFrame(), "Edit Album", album, musicService);
+        AlbumDialog dialog = new AlbumDialog(getParentFrame(), "Edit Album", album, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {

@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.EnhancedGenreDialog;
+import gui.dialogs.GenreDialog;
 import gui.models.GenreTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -297,7 +297,7 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
     }
 
     private void addGenre() {
-        EnhancedGenreDialog dialog = new EnhancedGenreDialog(getParentFrame(), "Add Genre", null, musicService);
+        GenreDialog dialog = new GenreDialog(getParentFrame(), "Add Genre", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
@@ -314,7 +314,7 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
         int modelRow = genreTable.convertRowIndexToModel(selectedRow);
         Genre genre = tableModel.getGenreAt(modelRow);
 
-        EnhancedGenreDialog dialog = new EnhancedGenreDialog(getParentFrame(), "Edit Genre", genre, musicService);
+        GenreDialog dialog = new GenreDialog(getParentFrame(), "Edit Genre", genre, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {

@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.EnhancedSongDialog;
+import gui.dialogs.SongDialog;
 import gui.models.SongTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -209,7 +209,7 @@ public class SongPanel extends JPanel implements RefreshablePanel {
     }
 
     private void addSong() {
-        EnhancedSongDialog dialog = new EnhancedSongDialog(getParentFrame(), "Add Song", null, musicService);
+        SongDialog dialog = new SongDialog(getParentFrame(), "Add Song", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
@@ -226,7 +226,7 @@ public class SongPanel extends JPanel implements RefreshablePanel {
         int modelRow = songTable.convertRowIndexToModel(selectedRow);
         Song song = tableModel.getSongAt(modelRow);
 
-        EnhancedSongDialog dialog = new EnhancedSongDialog(getParentFrame(), "Edit Song", song, musicService);
+        SongDialog dialog = new SongDialog(getParentFrame(), "Edit Song", song, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {

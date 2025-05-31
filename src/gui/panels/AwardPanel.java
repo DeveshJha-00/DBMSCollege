@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.EnhancedAwardDialog;
+import gui.dialogs.AwardDialog;
 import gui.models.AwardTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -306,7 +306,7 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
     }
 
     private void addAward() {
-        EnhancedAwardDialog dialog = new EnhancedAwardDialog(getParentFrame(), "Add Award", null, musicService);
+        AwardDialog dialog = new AwardDialog(getParentFrame(), "Add Award", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
@@ -323,7 +323,7 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         int modelRow = awardTable.convertRowIndexToModel(selectedRow);
         Award award = tableModel.getAwardAt(modelRow);
 
-        EnhancedAwardDialog dialog = new EnhancedAwardDialog(getParentFrame(), "Edit Award", award, musicService);
+        AwardDialog dialog = new AwardDialog(getParentFrame(), "Edit Award", award, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
