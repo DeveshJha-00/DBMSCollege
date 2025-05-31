@@ -5,12 +5,14 @@ import gui.MainWindow.RefreshablePanel;
 import gui.utils.UIConstants;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
+import model.*;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 /**
  * Panel for searching and browsing the music database
@@ -478,6 +480,9 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         // Find matching genres and show their related content
         foundAny |= searchGenreRelatedContent(searchTerm, results);
 
+        // Find matching awards and show their related content
+        foundAny |= searchAwardRelatedContent(searchTerm, results);
+
         return foundAny;
     }
 
@@ -871,6 +876,122 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                     }
                 } else {
                     results.append("  No songs found in this genre.\n");
+                }
+            }
+            results.append("\n");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Search for content related to matching awards
+     */
+    private boolean searchAwardRelatedContent(String searchTerm, StringBuilder results) {
+        var matchingAwards = new java.util.ArrayList<model.Award>();
+        for (var award : musicService.getAwardDAO().getAllAwards()) {
+            if (award.getAwardName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingAwards.add(award);
+            }
+        }
+
+        if (!matchingAwards.isEmpty()) {
+            results.append("🏆 RELATED CONTENT FOR MATCHING AWARDS:\n");
+
+            for (var award : matchingAwards) {
+                results.append("\n🎖️ Award: ").append(award.getAwardName())
+                       .append(" (").append(award.getYearWon()).append(")\n");
+
+                // Get all artists who received this award
+                List<Artist> awardArtists = musicService.getArtistsByAward(award.getAwardId());
+                if (!awardArtists.isEmpty()) {
+                    results.append("  🎤 Recipients (").append(awardArtists.size()).append("):\n");
+                    for (var artist : awardArtists) {
+                        results.append("    • ").append(artist.getName());
+                        if (artist.getCountry() != null) {
+                            results.append(" (").append(artist.getCountry()).append(")");
+                        }
+
+                        // Get the role for this artist-award relationship
+                        String role = musicService.getArtistDAO().getAwardRole(artist.getArtistId(), award.getAwardId());
+                        if (role != null && !role.isEmpty()) {
+                            results.append(" - Role: ").append(role);
+                        }
+                        results.append("\n");
+                    }
+
+                    // Get all songs by these award-winning artists
+                    var awardArtistSongs = new java.util.HashSet<model.Song>();
+                    for (var artist : awardArtists) {
+                        var artistSongs = musicService.getSongsByArtist(artist.getArtistId());
+                        awardArtistSongs.addAll(artistSongs);
+                    }
+
+                    if (!awardArtistSongs.isEmpty()) {
+                        results.append("  🎵 Songs by award recipients (").append(awardArtistSongs.size()).append("):\n");
+                        int count = 0;
+                        for (var song : awardArtistSongs) {
+                            if (count >= 10) { // Limit to first 10 songs to avoid clutter
+                                results.append("    ... and ").append(awardArtistSongs.size() - 10).append(" more songs\n");
+                                break;
+                            }
+                            results.append("    • ").append(song.getTitle());
+                            if (song.getFormattedDuration() != null) {
+                                results.append(" (").append(song.getFormattedDuration()).append(")");
+                            }
+                            results.append("\n");
+                            count++;
+                        }
+                    }
+
+                    // Get all albums by these award-winning artists
+                    var awardArtistAlbums = new java.util.HashSet<model.Album>();
+                    for (var artist : awardArtists) {
+                        var artistSongs = musicService.getSongsByArtist(artist.getArtistId());
+                        for (var song : artistSongs) {
+                            var allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                            for (var album : allAlbums) {
+                                var albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                                for (var albumSong : albumSongs) {
+                                    if (albumSong.getSongId() == song.getSongId()) {
+                                        awardArtistAlbums.add(album);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (!awardArtistAlbums.isEmpty()) {
+                        results.append("  💿 Albums by award recipients (").append(awardArtistAlbums.size()).append("):\n");
+                        for (var album : awardArtistAlbums) {
+                            results.append("    • ").append(album.getTitle());
+                            if (album.getReleaseYear() != null) {
+                                results.append(" (").append(album.getReleaseYear()).append(")");
+                            }
+                            results.append("\n");
+                        }
+                    }
+
+                    // Get all genres associated with award-winning artists
+                    var awardGenres = new java.util.HashSet<model.Genre>();
+                    for (var song : awardArtistSongs) {
+                        var songGenres = musicService.getGenresBySong(song.getSongId());
+                        awardGenres.addAll(songGenres);
+                    }
+
+                    if (!awardGenres.isEmpty()) {
+                        results.append("  🎭 Genres associated with award recipients (").append(awardGenres.size()).append("):\n");
+                        for (var genre : awardGenres) {
+                            results.append("    • ").append(genre.getName());
+                            if (genre.getDescription() != null && !genre.getDescription().isEmpty()) {
+                                results.append(" - ").append(genre.getDescription());
+                            }
+                            results.append("\n");
+                        }
+                    }
+                } else {
+                    results.append("  No recipients found for this award.\n");
                 }
             }
             results.append("\n");

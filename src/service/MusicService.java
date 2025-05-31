@@ -2,11 +2,10 @@ package service;
 
 import dao.*;
 import database.DatabaseConnection;
-import model.*;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.*;
 
 /**
  * Service class that handles business logic and relationship operations
@@ -156,6 +155,13 @@ public class MusicService {
             System.err.println("Error getting awards by artist: " + e.getMessage());
         }
         return awards;
+    }
+
+    /**
+     * Get all artists who received a specific award
+     */
+    public List<Artist> getArtistsByAward(int awardId) {
+        return artistDAO.getArtistsByAwardId(awardId);
     }
 
     // Song-Genre relationship methods (BELONGS_TO)

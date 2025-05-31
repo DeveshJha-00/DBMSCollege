@@ -216,71 +216,17 @@ public class MainWindow extends JFrame {
     private JToolBar createEnhancedToolBar() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        toolBar.setOpaque(false);
+        toolBar.setOpaque(false); // Keep toolbar transparent to match header gradient
         toolBar.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        // Create beautiful buttons with icons
-        JButton refreshButton = UIConstants.createSecondaryButton("🔄 Refresh");
-        refreshButton.setToolTipText("Refresh all data (F5)");
-        refreshButton.setFont(new Font("Segoe UI", Font.BOLD, 12)); // Ensure bold font
-        refreshButton.setForeground(new Color(25, 25, 112)); // Dark blue for visibility on light background
-        refreshButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
-
-        // Override hover effects to maintain proper contrast
-        refreshButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                refreshButton.setBackground(new Color(240, 240, 240, 150)); // Slightly darker on hover
-                refreshButton.setForeground(new Color(25, 25, 112)); // Keep dark text
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                refreshButton.setBackground(new Color(255, 255, 255, 100)); // Original background
-                refreshButton.setForeground(new Color(25, 25, 112)); // Keep dark text
-            }
-        });
+        // Create custom toolbar buttons without conflicting hover effects
+        JButton refreshButton = createToolbarButton("🔄 Refresh", "Refresh all data (F5)");
         refreshButton.addActionListener(e -> refreshAllPanels());
 
-        JButton searchButton = UIConstants.createSecondaryButton("🔍 Search");
-        searchButton.setToolTipText("Open search panel (Ctrl+F)");
-        searchButton.setFont(new Font("Segoe UI", Font.BOLD, 12)); // Ensure bold font
-        searchButton.setForeground(new Color(25, 25, 112)); // Dark blue for visibility on light background
-        searchButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
-
-        // Override hover effects to maintain proper contrast
-        searchButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                searchButton.setBackground(new Color(240, 240, 240, 150)); // Slightly darker on hover
-                searchButton.setForeground(new Color(25, 25, 112)); // Keep dark text
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                searchButton.setBackground(new Color(255, 255, 255, 100)); // Original background
-                searchButton.setForeground(new Color(25, 25, 112)); // Keep dark text
-            }
-        });
+        JButton searchButton = createToolbarButton("🔍 Search", "Open search panel (Ctrl+F)");
         searchButton.addActionListener(e -> tabbedPane.setSelectedIndex(6));
 
-        JButton aboutButton = UIConstants.createSecondaryButton("ℹ️ About");
-        aboutButton.setToolTipText("About this application");
-        aboutButton.setFont(new Font("Segoe UI", Font.BOLD, 12)); // Ensure bold font
-        aboutButton.setForeground(new Color(25, 25, 112)); // Dark blue for visibility on light background
-        aboutButton.setBackground(new Color(255, 255, 255, 100)); // Semi-transparent white
-
-        // Override hover effects to maintain proper contrast
-        aboutButton.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseEntered(java.awt.event.MouseEvent e) {
-                aboutButton.setBackground(new Color(240, 240, 240, 150)); // Slightly darker on hover
-                aboutButton.setForeground(new Color(25, 25, 112)); // Keep dark text
-            }
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                aboutButton.setBackground(new Color(255, 255, 255, 100)); // Original background
-                aboutButton.setForeground(new Color(25, 25, 112)); // Keep dark text
-            }
-        });
+        JButton aboutButton = createToolbarButton("ℹ️ About", "About this application");
         aboutButton.addActionListener(e -> showAboutDialog());
 
         toolBar.add(Box.createHorizontalGlue()); // Push buttons to the right
@@ -291,6 +237,48 @@ public class MainWindow extends JFrame {
         toolBar.add(aboutButton);
 
         return toolBar;
+    }
+
+    /**
+     * Create a custom toolbar button with proper hover effects and full opacity
+     */
+    private JButton createToolbarButton(String text, String tooltip) {
+        JButton button = new JButton(text);
+        button.setToolTipText(tooltip);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        button.setForeground(new Color(25, 25, 112)); // Dark blue text
+        button.setBackground(new Color(255, 255, 255)); // FULLY OPAQUE white background
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(189, 189, 189), 1),
+            BorderFactory.createEmptyBorder(6, 16, 6, 16)
+        ));
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setPreferredSize(new Dimension(UIConstants.BUTTON_WIDTH, UIConstants.BUTTON_HEIGHT));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Add smooth hover effect without conflicts - using fully opaque colors
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(new Color(230, 230, 250)); // Light lavender on hover - FULLY OPAQUE
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(138, 43, 226), 2), // Purple border on hover
+                    BorderFactory.createEmptyBorder(5, 15, 5, 15) // Adjust padding for thicker border
+                ));
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(new Color(255, 255, 255)); // FULLY OPAQUE white background
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(189, 189, 189), 1), // Original border
+                    BorderFactory.createEmptyBorder(6, 16, 6, 16)
+                ));
+            }
+        });
+
+        return button;
     }
 
     private JPanel createStatusBar() {
