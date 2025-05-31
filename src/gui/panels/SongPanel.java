@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.SongDialog;
+import gui.dialogs.EnhancedSongDialog;
 import gui.models.SongTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -209,19 +209,13 @@ public class SongPanel extends JPanel implements RefreshablePanel {
     }
 
     private void addSong() {
-        SongDialog dialog = new SongDialog(getParentFrame(), "Add Song", null);
+        EnhancedSongDialog dialog = new EnhancedSongDialog(getParentFrame(), "Add Song", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            Song song = dialog.getSong();
-            if (musicService.getSongDAO().createSong(song)) {
-                refreshData();
-                JOptionPane.showMessageDialog(this, "Song added successfully!",
-                                            "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to add song!",
-                                            "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Song is already saved in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
 
@@ -232,19 +226,13 @@ public class SongPanel extends JPanel implements RefreshablePanel {
         int modelRow = songTable.convertRowIndexToModel(selectedRow);
         Song song = tableModel.getSongAt(modelRow);
 
-        SongDialog dialog = new SongDialog(getParentFrame(), "Edit Song", song);
+        EnhancedSongDialog dialog = new EnhancedSongDialog(getParentFrame(), "Edit Song", song, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            Song updatedSong = dialog.getSong();
-            if (musicService.getSongDAO().updateSong(updatedSong)) {
-                refreshData();
-                JOptionPane.showMessageDialog(this, "Song updated successfully!",
-                                            "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, "Failed to update song!",
-                                            "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Song is already updated in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
 

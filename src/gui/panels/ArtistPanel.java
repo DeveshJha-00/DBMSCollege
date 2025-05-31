@@ -51,7 +51,7 @@ public class ArtistPanel extends JPanel implements RefreshablePanel {
 
         // Create search field
         searchField = new JTextField(20);
-        searchField.setToolTipText("Search artists by name or country");
+        searchField.setToolTipText("Search artists by name");
 
         // Create buttons
         addButton = new JButton("Add Artist");
@@ -282,7 +282,8 @@ public class ArtistPanel extends JPanel implements RefreshablePanel {
         if (text.isEmpty()) {
             sorter.setRowFilter(null);
         } else {
-            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+            // Filter only on column 1 (Name column)
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text, 1));
         }
     }
 

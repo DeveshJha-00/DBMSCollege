@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.AwardDialog;
+import gui.dialogs.EnhancedAwardDialog;
 import gui.models.AwardTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -117,10 +117,10 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         searchPanel.add(searchField);
 
         // Button section with beautiful styling and better spacing
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         buttonPanel.setOpaque(false);
 
-        // Style buttons with EXTREMELY VISIBLE colors
+        // Style buttons with EXTREMELY VISIBLE colors and better spacing
         styleButton(addButton, "➕ Add Award", new Color(0, 255, 0));       // NEON GREEN
         styleButton(editButton, "✏️ Edit", new Color(0, 150, 255));         // ELECTRIC BLUE
         styleButton(deleteButton, "🗑️ Delete", new Color(255, 0, 0));       // PURE RED
@@ -199,8 +199,17 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Set optimized size for better layout without overlap
-        button.setPreferredSize(new Dimension(140, 40)); // Smaller but still visible buttons
-        button.setMinimumSize(new Dimension(140, 40));
+        // Different sizes for different buttons to reduce clutter
+        int buttonWidth;
+        if (text.contains("View Recipients")) {
+            buttonWidth = 180; // Larger for longer text
+        } else if (text.contains("Edit")) {
+            buttonWidth = 100; // Smaller for edit button
+        } else {
+            buttonWidth = 130; // Standard size for other buttons
+        }
+        button.setPreferredSize(new Dimension(buttonWidth, 40));
+        button.setMinimumSize(new Dimension(buttonWidth, 40));
 
         // Enhanced hover effect with better contrast
         button.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -297,21 +306,13 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
     }
 
     private void addAward() {
-        AwardDialog dialog = new AwardDialog(getParentFrame(), "Add Award", null);
+        EnhancedAwardDialog dialog = new EnhancedAwardDialog(getParentFrame(), "Add Award", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            Award award = dialog.getAward();
-            if (musicService.getAwardDAO().createAward(award)) {
-                refreshData();
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_SUCCESS + " Award added successfully!",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_ERROR + " Failed to add award!",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Award is already saved in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
 
@@ -322,21 +323,13 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         int modelRow = awardTable.convertRowIndexToModel(selectedRow);
         Award award = tableModel.getAwardAt(modelRow);
 
-        AwardDialog dialog = new AwardDialog(getParentFrame(), "Edit Award", award);
+        EnhancedAwardDialog dialog = new EnhancedAwardDialog(getParentFrame(), "Edit Award", award, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            Award updatedAward = dialog.getAward();
-            if (musicService.getAwardDAO().updateAward(updatedAward)) {
-                refreshData();
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_SUCCESS + " Award updated successfully!",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_ERROR + " Failed to update award!",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Award is already updated in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
 
@@ -375,45 +368,149 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         int modelRow = awardTable.convertRowIndexToModel(selectedRow);
         Award award = tableModel.getAwardAt(modelRow);
 
-        // Create a dialog to show artists who received this award
-        JDialog recipientsDialog = new JDialog(getParentFrame(), "Recipients of " + award.getAwardName(), true);
+        // Create a beautiful dialog to show artists who received this award
+        JDialog recipientsDialog = new JDialog(getParentFrame(), "🏆 Recipients of " + award.getAwardName(), true);
         recipientsDialog.setLayout(new BorderLayout());
-        recipientsDialog.getContentPane().setBackground(UIConstants.PANEL_BACKGROUND);
+        recipientsDialog.getContentPane().setBackground(new Color(248, 249, 250));
 
-        // Get artists for this award (placeholder - will be implemented later)
-        List<model.Artist> artists = new java.util.ArrayList<>(); // musicService.getArtistsByAward(award.getAwardId());
+        // Create beautiful header panel
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBackground(new Color(255, 215, 0)); // Gold background
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        // Create list model
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        if (artists.isEmpty()) {
-            listModel.addElement("No artists found for this award (feature coming soon)");
+        JLabel titleLabel = new JLabel("🏆 " + award.getAwardName() + " (" + award.getYearWon() + ")");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        titleLabel.setForeground(new Color(139, 69, 19)); // Dark brown text
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JLabel subtitleLabel = new JLabel("Award Recipients and Their Roles");
+        subtitleLabel.setFont(new Font("Arial", Font.ITALIC, 14));
+        subtitleLabel.setForeground(new Color(160, 82, 45)); // Saddle brown
+        subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+        headerPanel.add(subtitleLabel, BorderLayout.SOUTH);
+
+        // Get artists for this award with their roles
+        List<String[]> artistRoles = musicService.getArtistDAO().getArtistRolesByAwardId(award.getAwardId());
+
+        // Create beautiful content panel
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.setBackground(new Color(248, 249, 250));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+
+        if (artistRoles.isEmpty()) {
+            // No recipients found
+            JLabel noRecipientsLabel = new JLabel("<html><div style='text-align: center;'>" +
+                "🚫 No recipients found for this award.<br><br>" +
+                "<i>This award hasn't been assigned to any artists yet.</i></div></html>");
+            noRecipientsLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+            noRecipientsLabel.setForeground(new Color(108, 117, 125));
+            noRecipientsLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            noRecipientsLabel.setBorder(BorderFactory.createEmptyBorder(50, 20, 50, 20));
+            contentPanel.add(noRecipientsLabel, BorderLayout.CENTER);
         } else {
-            for (model.Artist artist : artists) {
-                String displayText = artist.getName();
-                if (artist.getCountry() != null) {
-                    displayText += " (" + artist.getCountry() + ")";
+            // Create beautiful recipients list
+            JPanel recipientsPanel = new JPanel();
+            recipientsPanel.setLayout(new BoxLayout(recipientsPanel, BoxLayout.Y_AXIS));
+            recipientsPanel.setBackground(Color.WHITE);
+            recipientsPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 215, 0), 2),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)
+            ));
+
+            for (int i = 0; i < artistRoles.size(); i++) {
+                String[] artistRole = artistRoles.get(i);
+                String name = artistRole[0];
+                String country = artistRole[1];
+                String role = artistRole[2];
+
+                // Create individual recipient card
+                JPanel recipientCard = new JPanel(new BorderLayout());
+                recipientCard.setBackground(i % 2 == 0 ? new Color(255, 248, 220) : Color.WHITE); // Alternating colors
+                recipientCard.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(255, 215, 0, 100), 1),
+                    BorderFactory.createEmptyBorder(12, 15, 12, 15)
+                ));
+                recipientCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+
+                // Artist name and country
+                String artistInfo = "🎤 " + name;
+                if (country != null && !country.trim().isEmpty()) {
+                    artistInfo += " 🌍 " + country;
                 }
-                listModel.addElement(displayText);
+                JLabel artistLabel = new JLabel(artistInfo);
+                artistLabel.setFont(new Font("Arial", Font.BOLD, 14));
+                artistLabel.setForeground(new Color(52, 58, 64));
+
+                // Role information
+                String roleInfo = role != null && !role.trim().isEmpty() ? "🎭 Role: " + role : "🎭 Role: Not specified";
+                JLabel roleLabel = new JLabel(roleInfo);
+                roleLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+                roleLabel.setForeground(new Color(108, 117, 125));
+
+                JPanel textPanel = new JPanel(new BorderLayout());
+                textPanel.setOpaque(false);
+                textPanel.add(artistLabel, BorderLayout.NORTH);
+                textPanel.add(roleLabel, BorderLayout.SOUTH);
+
+                recipientCard.add(textPanel, BorderLayout.CENTER);
+                recipientsPanel.add(recipientCard);
+
+                if (i < artistRoles.size() - 1) {
+                    recipientsPanel.add(Box.createVerticalStrut(8));
+                }
             }
+
+            JScrollPane scrollPane = new JScrollPane(recipientsPanel);
+            scrollPane.setPreferredSize(new Dimension(500, 350));
+            scrollPane.setBorder(null);
+            scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+            scrollPane.setBackground(Color.WHITE);
+
+            contentPanel.add(scrollPane, BorderLayout.CENTER);
         }
 
-        JList<String> artistsList = new JList<>(listModel);
-        artistsList.setFont(UIConstants.BODY_FONT);
-        artistsList.setSelectionBackground(UIConstants.SELECTED_BACKGROUND);
-        artistsList.setSelectionForeground(UIConstants.SELECTED_TEXT_COLOR);
+        // Create beautiful button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.setBackground(new Color(248, 249, 250));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 20, 20));
 
-        JScrollPane scrollPane = new JScrollPane(artistsList);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
-        scrollPane.setBorder(UIConstants.PANEL_BORDER);
+        // Create a more visible close button
+        JButton closeButton = new JButton("✖️ Close");
+        closeButton.setFont(new Font("Arial", Font.BOLD, 14));
+        closeButton.setForeground(Color.BLACK);
+        closeButton.setBackground(new Color(220, 53, 69)); // Bootstrap danger red
+        closeButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(200, 35, 51), 2),
+            BorderFactory.createEmptyBorder(10, 20, 10, 20)
+        ));
+        closeButton.setFocusPainted(false);
+        closeButton.setOpaque(true);
+        closeButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        closeButton.setPreferredSize(new Dimension(120, 40));
 
-        JButton closeButton = UIConstants.createPrimaryButton("Close");
+        // Add hover effect for close button
+        closeButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                closeButton.setBackground(new Color(200, 35, 51));
+                closeButton.setForeground(Color.WHITE);
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                closeButton.setBackground(new Color(220, 53, 69));
+                closeButton.setForeground(Color.WHITE);
+            }
+        });
+
         closeButton.addActionListener(e -> recipientsDialog.dispose());
-
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
         buttonPanel.add(closeButton);
 
-        recipientsDialog.add(scrollPane, BorderLayout.CENTER);
+        // Assemble dialog
+        recipientsDialog.add(headerPanel, BorderLayout.NORTH);
+        recipientsDialog.add(contentPanel, BorderLayout.CENTER);
         recipientsDialog.add(buttonPanel, BorderLayout.SOUTH);
 
         recipientsDialog.pack();

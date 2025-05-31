@@ -3,7 +3,6 @@ package gui.panels;
 import service.MusicService;
 import gui.MainWindow.RefreshablePanel;
 import gui.utils.UIConstants;
-import gui.utils.IconManager;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
 
@@ -21,7 +20,6 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
 
     private final MusicService musicService;
     private JTextField searchField;
-    private JComboBox<String> searchTypeCombo;
     private JTextArea resultsArea;
     private JButton searchButton, clearButton, advancedSearchButton, browseButton, statisticsButton;
 
@@ -37,14 +35,7 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
 
         // Search field
         searchField = new JTextField(30);
-        searchField.setToolTipText("Enter search terms");
-
-        // Search type combo
-        String[] searchTypes = {
-            "All Entities", "Artists Only", "Albums Only",
-            "Songs Only", "Genres Only", "Awards Only"
-        };
-        searchTypeCombo = new JComboBox<>(searchTypes);
+        searchField.setToolTipText("Enter search terms to find across all entities");
 
         // Results area
         resultsArea = new JTextArea(15, 50);
@@ -143,31 +134,86 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         panel.setBackground(UIConstants.CARD_BACKGROUND);
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(UIConstants.PRIMARY_LIGHT, 1),
-            "🎯 Quick Search",
+            "🌐 Global Search",
             0, 0,
             UIConstants.SUBTITLE_FONT,
             UIConstants.PRIMARY_COLOR
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(10, 12, 10, 12);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // Search type
+        // Search label
         gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(UIConstants.createStyledLabel("Search in:", UIConstants.SUBTITLE_FONT), gbc);
-        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 0.3;
-        panel.add(searchTypeCombo, gbc);
+        JLabel searchLabel = UIConstants.createStyledLabel("Search across all entities:", UIConstants.SUBTITLE_FONT);
+        searchLabel.setForeground(UIConstants.PRIMARY_COLOR);
+        panel.add(searchLabel, gbc);
 
-        // Search field
-        gbc.gridx = 2; gbc.weightx = 0.5;
+        // Search field with improved styling
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        gbc.insets = new Insets(10, 20, 10, 12);
+        searchField.setPreferredSize(new Dimension(400, 35));
+        searchField.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchField.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIConstants.PRIMARY_LIGHT, 2),
+            BorderFactory.createEmptyBorder(8, 12, 8, 12)
+        ));
         panel.add(searchField, gbc);
 
-        // Buttons
-        gbc.gridx = 3; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        // Buttons with improved styling
+        gbc.gridx = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        gbc.insets = new Insets(10, 8, 10, 8);
+
+        // Style search button
+        searchButton.setPreferredSize(new Dimension(90, 35));
+        searchButton.setFont(new Font("Arial", Font.BOLD, 13));
+        searchButton.setBackground(UIConstants.PRIMARY_COLOR);
+        searchButton.setForeground(Color.BLACK);
+        searchButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIConstants.PRIMARY_COLOR.darker(), 1),
+            BorderFactory.createEmptyBorder(6, 12, 6, 12)
+        ));
+        searchButton.setFocusPainted(false);
+        searchButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Add hover effect for search button
+        searchButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                searchButton.setBackground(UIConstants.PRIMARY_COLOR.brighter());
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                searchButton.setBackground(UIConstants.PRIMARY_COLOR);
+            }
+        });
         panel.add(searchButton, gbc);
 
-        gbc.gridx = 4;
+        gbc.gridx = 3;
+        // Style clear button
+        clearButton.setPreferredSize(new Dimension(90, 35));
+        clearButton.setFont(new Font("Arial", Font.BOLD, 13));
+        clearButton.setBackground(UIConstants.ACCENT_COLOR);
+        clearButton.setForeground(Color.BLACK);
+        clearButton.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UIConstants.ACCENT_COLOR.darker(), 1),
+            BorderFactory.createEmptyBorder(6, 12, 6, 12)
+        ));
+        clearButton.setFocusPainted(false);
+        clearButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Add hover effect for clear button
+        clearButton.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                clearButton.setBackground(UIConstants.ACCENT_COLOR.brighter());
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                clearButton.setBackground(UIConstants.ACCENT_COLOR);
+            }
+        });
         panel.add(clearButton, gbc);
 
         return panel;
@@ -178,7 +224,7 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             createBeautifulFeatureCard("🔧", "Advanced Search",
                 "Duration ranges, birth years, multi-criteria search", advancedSearchButton),
             createBeautifulFeatureCard("📂", "Browse Categories",
-                "Explore by genre, year, country, or album", browseButton),
+                "Explore by genre, year range, country, or album", browseButton),
             createBeautifulFeatureCard("📈", "Database Statistics",
                 "View comprehensive database analytics", statisticsButton)
         );
@@ -337,45 +383,24 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
 
     private void performSearch() {
         String searchTerm = searchField.getText().trim();
-        String searchType = (String) searchTypeCombo.getSelectedItem();
 
         if (searchTerm.isEmpty()) {
             resultsArea.setText("Please enter search terms.");
             return;
         }
 
-        resultsArea.setText("Searching for '" + searchTerm + "' in " + searchType + "...\n\n");
+        resultsArea.setText("Searching for '" + searchTerm + "' across all entities...\n\n");
 
         StringBuilder results = new StringBuilder();
-        results.append("Search Results for: '").append(searchTerm).append("'\n");
-        results.append("Search Type: ").append(searchType).append("\n");
-        results.append("=" .repeat(50)).append("\n\n");
+        results.append("🌐 Global Search Results for: '").append(searchTerm).append("'\n");
+        results.append("=" .repeat(60)).append("\n\n");
 
         try {
-            // Search based on type
-            switch (searchType) {
-                case "All Entities":
-                    searchAllEntities(searchTerm, results);
-                    break;
-                case "Artists Only":
-                    searchArtists(searchTerm, results);
-                    break;
-                case "Albums Only":
-                    searchAlbums(searchTerm, results);
-                    break;
-                case "Songs Only":
-                    searchSongs(searchTerm, results);
-                    break;
-                case "Genres Only":
-                    searchGenres(searchTerm, results);
-                    break;
-                case "Awards Only":
-                    searchAwards(searchTerm, results);
-                    break;
-            }
+            // Perform comprehensive global search
+            performComprehensiveSearch(searchTerm, results);
 
             if (results.length() <= 100) { // Only header added
-                results.append("No results found.");
+                results.append("No results found across any entities.");
             }
 
         } catch (Exception ex) {
@@ -391,22 +416,477 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         resultsArea.setText("Enter search terms above and click 'Search' to find results...");
     }
 
-    private void searchAllEntities(String searchTerm, StringBuilder results) {
-        searchArtists(searchTerm, results);
-        searchAlbums(searchTerm, results);
-        searchSongs(searchTerm, results);
-        searchGenres(searchTerm, results);
-        searchAwards(searchTerm, results);
+    /**
+     * Performs comprehensive global search showing all related entities
+     */
+    private void performComprehensiveSearch(String searchTerm, StringBuilder results) {
+        boolean foundAnyResults = false;
+
+        // Search for direct matches first
+        foundAnyResults |= searchDirectMatches(searchTerm, results);
+
+        // Search for related entities based on direct matches
+        foundAnyResults |= searchRelatedEntities(searchTerm, results);
+
+        if (!foundAnyResults) {
+            results.append("No results found for '").append(searchTerm).append("' across any entities.");
+        }
     }
 
-    private void searchArtists(String searchTerm, StringBuilder results) {
+    /**
+     * Search for direct matches in all entity types
+     */
+    private boolean searchDirectMatches(String searchTerm, StringBuilder results) {
+        boolean foundAny = false;
+
+        // Search artists
+        foundAny |= searchArtists(searchTerm, results);
+
+        // Search songs
+        foundAny |= searchSongs(searchTerm, results);
+
+        // Search albums
+        foundAny |= searchAlbums(searchTerm, results);
+
+        // Search genres
+        foundAny |= searchGenres(searchTerm, results);
+
+        // Search awards
+        foundAny |= searchAwards(searchTerm, results);
+
+        // Search artists by country (separate section)
+        foundAny |= searchArtistsByCountry(searchTerm, results);
+
+        return foundAny;
+    }
+
+    /**
+     * Search for entities related to the direct matches
+     */
+    private boolean searchRelatedEntities(String searchTerm, StringBuilder results) {
+        boolean foundAny = false;
+
+        // Find matching artists and show their related content
+        foundAny |= searchArtistRelatedContent(searchTerm, results);
+
+        // Find matching songs and show their related content
+        foundAny |= searchSongRelatedContent(searchTerm, results);
+
+        // Find matching albums and show their related content
+        foundAny |= searchAlbumRelatedContent(searchTerm, results);
+
+        // Find matching genres and show their related content
+        foundAny |= searchGenreRelatedContent(searchTerm, results);
+
+        return foundAny;
+    }
+
+    /**
+     * Search for content related to matching artists
+     */
+    private boolean searchArtistRelatedContent(String searchTerm, StringBuilder results) {
+        var matchingArtists = new java.util.ArrayList<model.Artist>();
+        for (var artist : musicService.getArtistDAO().getAllArtists()) {
+            // Only match by artist name, not country, for cleaner results
+            if (artist.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingArtists.add(artist);
+            }
+        }
+
+        if (!matchingArtists.isEmpty()) {
+            results.append("🎤 RELATED CONTENT FOR MATCHING ARTISTS:\n");
+
+            for (var artist : matchingArtists) {
+                results.append("\n📍 ").append(artist.getName()).append(":\n");
+
+                // Show artist's songs
+                var artistSongs = musicService.getSongsByArtist(artist.getArtistId());
+                if (!artistSongs.isEmpty()) {
+                    results.append("  🎵 Songs:\n");
+                    for (var song : artistSongs) {
+                        results.append("    • ").append(song.getTitle());
+                        if (song.getFormattedDuration() != null) {
+                            results.append(" (").append(song.getFormattedDuration()).append(")");
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show albums that contain artist's songs
+                var artistAlbums = new java.util.HashSet<model.Album>();
+                var allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                for (var album : allAlbums) {
+                    var albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                    for (var albumSong : albumSongs) {
+                        for (var artistSong : artistSongs) {
+                            if (albumSong.getSongId() == artistSong.getSongId()) {
+                                artistAlbums.add(album);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!artistAlbums.isEmpty()) {
+                    results.append("  💿 Albums:\n");
+                    for (var album : artistAlbums) {
+                        results.append("    • ").append(album.getTitle());
+                        if (album.getReleaseYear() != null) {
+                            results.append(" (").append(album.getReleaseYear()).append(")");
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show artist's awards
+                var artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                if (!artistAwards.isEmpty()) {
+                    results.append("  🏆 Awards:\n");
+                    for (var award : artistAwards) {
+                        results.append("    • ").append(award.getAwardName())
+                               .append(" (").append(award.getYearWon()).append(")\n");
+                    }
+                }
+
+                // Show genres of artist's songs
+                var artistGenres = new java.util.HashSet<model.Genre>();
+                for (var song : artistSongs) {
+                    var genresForSong = musicService.getGenresBySong(song.getSongId());
+                    artistGenres.addAll(genresForSong);
+                }
+                if (!artistGenres.isEmpty()) {
+                    results.append("  🎭 Genres:\n");
+                    for (var genre : artistGenres) {
+                        results.append("    • ").append(genre.getName());
+                        if (genre.getDescription() != null && !genre.getDescription().isEmpty()) {
+                            results.append(" - ").append(genre.getDescription());
+                        }
+                        results.append("\n");
+                    }
+                }
+            }
+            results.append("\n");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Search for content related to matching songs
+     */
+    private boolean searchSongRelatedContent(String searchTerm, StringBuilder results) {
+        var matchingSongs = new java.util.ArrayList<model.Song>();
+        for (var song : musicService.getSongDAO().getAllSongs()) {
+            if (song.getTitle().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingSongs.add(song);
+            }
+        }
+
+        if (!matchingSongs.isEmpty()) {
+            results.append("🎵 RELATED CONTENT FOR MATCHING SONGS:\n");
+
+            for (var song : matchingSongs) {
+                results.append("\n🎶 ").append(song.getTitle());
+                if (song.getFormattedDuration() != null) {
+                    results.append(" (").append(song.getFormattedDuration()).append(")");
+                }
+                if (song.getReleaseYear() != null) {
+                    results.append(" - ").append(song.getReleaseYear());
+                }
+                results.append(":\n");
+
+                // Show artists who perform this song
+                var songArtists = musicService.getArtistsBySong(song.getSongId());
+                if (!songArtists.isEmpty()) {
+                    results.append("  🎤 Performed by:\n");
+                    for (var artist : songArtists) {
+                        results.append("    • ").append(artist.getName());
+                        if (artist.getCountry() != null) {
+                            results.append(" (").append(artist.getCountry()).append(")");
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show albums containing this song
+                var songAlbums = new java.util.ArrayList<model.Album>();
+                var allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                for (var album : allAlbums) {
+                    var albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                    for (var albumSong : albumSongs) {
+                        if (albumSong.getSongId() == song.getSongId()) {
+                            songAlbums.add(album);
+                            break;
+                        }
+                    }
+                }
+                if (!songAlbums.isEmpty()) {
+                    results.append("  💿 Featured in Albums:\n");
+                    for (var album : songAlbums) {
+                        results.append("    • ").append(album.getTitle());
+                        if (album.getReleaseYear() != null) {
+                            results.append(" (").append(album.getReleaseYear()).append(")");
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show genres of this song
+                var songGenres = musicService.getGenresBySong(song.getSongId());
+                if (!songGenres.isEmpty()) {
+                    results.append("  🎭 Genres:\n");
+                    for (var genre : songGenres) {
+                        results.append("    • ").append(genre.getName());
+                        if (genre.getDescription() != null && !genre.getDescription().isEmpty()) {
+                            results.append(" - ").append(genre.getDescription());
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show awards related to the artists of this song
+                var relatedAwards = new java.util.HashSet<model.Award>();
+                for (var artist : songArtists) {
+                    var artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                    relatedAwards.addAll(artistAwards);
+                }
+                if (!relatedAwards.isEmpty()) {
+                    results.append("  🏆 Related Awards (Artist Awards):\n");
+                    for (var award : relatedAwards) {
+                        results.append("    • ").append(award.getAwardName())
+                               .append(" (").append(award.getYearWon()).append(")\n");
+                    }
+                }
+            }
+            results.append("\n");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Search for content related to matching albums
+     */
+    private boolean searchAlbumRelatedContent(String searchTerm, StringBuilder results) {
+        var matchingAlbums = new java.util.ArrayList<model.Album>();
+        for (var album : musicService.getAlbumDAO().getAllAlbums()) {
+            if (album.getTitle().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingAlbums.add(album);
+            }
+        }
+
+        if (!matchingAlbums.isEmpty()) {
+            results.append("💿 RELATED CONTENT FOR MATCHING ALBUMS:\n");
+
+            for (var album : matchingAlbums) {
+                results.append("\n💽 ").append(album.getTitle());
+                if (album.getReleaseYear() != null) {
+                    results.append(" (").append(album.getReleaseYear()).append(")");
+                }
+                results.append(":\n");
+
+                // Show songs in this album
+                var albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                if (!albumSongs.isEmpty()) {
+                    results.append("  🎵 Songs in Album:\n");
+                    int totalDuration = 0;
+                    for (var song : albumSongs) {
+                        results.append("    • ").append(song.getTitle());
+                        if (song.getFormattedDuration() != null) {
+                            results.append(" (").append(song.getFormattedDuration()).append(")");
+                        }
+                        if (song.getReleaseYear() != null) {
+                            results.append(" - ").append(song.getReleaseYear());
+                        }
+                        results.append("\n");
+
+                        // Calculate total duration
+                        if (song.getDuration() != null) {
+                            totalDuration += song.getDuration();
+                        }
+                    }
+
+                    // Show album statistics
+                    results.append("    📊 Album Stats: ").append(albumSongs.size()).append(" songs");
+                    if (totalDuration > 0) {
+                        int minutes = totalDuration / 60;
+                        int seconds = totalDuration % 60;
+                        results.append(", Total Duration: ").append(minutes).append(":").append(String.format("%02d", seconds));
+                    }
+                    results.append("\n");
+                }
+
+                // Show artists who have songs in this album
+                var albumArtists = new java.util.HashSet<model.Artist>();
+                for (var song : albumSongs) {
+                    var songArtists = musicService.getArtistsBySong(song.getSongId());
+                    albumArtists.addAll(songArtists);
+                }
+                if (!albumArtists.isEmpty()) {
+                    results.append("  🎤 Featured Artists:\n");
+                    for (var artist : albumArtists) {
+                        results.append("    • ").append(artist.getName());
+                        if (artist.getCountry() != null) {
+                            results.append(" (").append(artist.getCountry()).append(")");
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show genres of songs in this album
+                var albumGenres = new java.util.HashSet<model.Genre>();
+                for (var song : albumSongs) {
+                    var songGenres = musicService.getGenresBySong(song.getSongId());
+                    albumGenres.addAll(songGenres);
+                }
+                if (!albumGenres.isEmpty()) {
+                    results.append("  🎭 Album Genres:\n");
+                    for (var genre : albumGenres) {
+                        results.append("    • ").append(genre.getName());
+                        if (genre.getDescription() != null && !genre.getDescription().isEmpty()) {
+                            results.append(" - ").append(genre.getDescription());
+                        }
+                        results.append("\n");
+                    }
+                }
+
+                // Show awards related to the artists in this album
+                var relatedAwards = new java.util.HashSet<model.Award>();
+                for (var artist : albumArtists) {
+                    var artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                    relatedAwards.addAll(artistAwards);
+                }
+                if (!relatedAwards.isEmpty()) {
+                    results.append("  🏆 Related Awards (Artist Awards):\n");
+                    for (var award : relatedAwards) {
+                        results.append("    • ").append(award.getAwardName())
+                               .append(" (").append(award.getYearWon()).append(")\n");
+                    }
+                }
+
+                // Show total songs metadata from album relationship
+                int totalSongsMetadata = musicService.getTotalSongsInAlbum(album.getAlbumId());
+                if (totalSongsMetadata > 0) {
+                    results.append("  📀 Album Metadata: Total songs declared: ").append(totalSongsMetadata).append("\n");
+                }
+            }
+            results.append("\n");
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Search for content related to matching genres
+     */
+    private boolean searchGenreRelatedContent(String searchTerm, StringBuilder results) {
+        var matchingGenres = new java.util.ArrayList<model.Genre>();
+        for (var genre : musicService.getGenreDAO().getAllGenres()) {
+            if (genre.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingGenres.add(genre);
+            }
+        }
+
+        if (!matchingGenres.isEmpty()) {
+            results.append("🎭 RELATED CONTENT FOR MATCHING GENRES:\n");
+
+            for (var genre : matchingGenres) {
+                results.append("\n📂 Genre: ").append(genre.getName()).append("\n");
+                if (genre.getDescription() != null && !genre.getDescription().isEmpty()) {
+                    results.append("  Description: ").append(genre.getDescription()).append("\n");
+                }
+
+                // Get all songs in this genre
+                var genreSongs = musicService.getSongsByGenre(genre.getGenreId());
+                if (!genreSongs.isEmpty()) {
+                    results.append("  🎵 Songs in this genre (").append(genreSongs.size()).append("):\n");
+                    for (var song : genreSongs) {
+                        results.append("    • ").append(song.getTitle());
+                        if (song.getFormattedDuration() != null) {
+                            results.append(" (").append(song.getFormattedDuration()).append(")");
+                        }
+                        if (song.getReleaseYear() != null) {
+                            results.append(" - ").append(song.getReleaseYear());
+                        }
+                        results.append("\n");
+                    }
+
+                    // Get all artists who perform songs in this genre
+                    var genreArtists = new java.util.HashSet<model.Artist>();
+                    for (var song : genreSongs) {
+                        var songArtists = musicService.getArtistsBySong(song.getSongId());
+                        genreArtists.addAll(songArtists);
+                    }
+
+                    if (!genreArtists.isEmpty()) {
+                        results.append("  🎤 Artists performing in this genre (").append(genreArtists.size()).append("):\n");
+                        for (var artist : genreArtists) {
+                            results.append("    • ").append(artist.getName());
+                            if (artist.getCountry() != null) {
+                                results.append(" (").append(artist.getCountry()).append(")");
+                            }
+                            results.append("\n");
+                        }
+                    }
+
+                    // Get all albums containing songs from this genre
+                    var genreAlbums = new java.util.HashSet<model.Album>();
+                    for (var song : genreSongs) {
+                        // Find albums containing this song
+                        var allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                        for (var album : allAlbums) {
+                            var albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                            for (var albumSong : albumSongs) {
+                                if (albumSong.getSongId() == song.getSongId()) {
+                                    genreAlbums.add(album);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!genreAlbums.isEmpty()) {
+                        results.append("  💿 Albums containing songs from this genre (").append(genreAlbums.size()).append("):\n");
+                        for (var album : genreAlbums) {
+                            results.append("    • ").append(album.getTitle());
+                            if (album.getReleaseYear() != null) {
+                                results.append(" (").append(album.getReleaseYear()).append(")");
+                            }
+                            results.append("\n");
+                        }
+                    }
+
+                    // Get all awards related to artists in this genre
+                    var genreAwards = new java.util.HashSet<model.Award>();
+                    for (var artist : genreArtists) {
+                        var artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                        genreAwards.addAll(artistAwards);
+                    }
+
+                    if (!genreAwards.isEmpty()) {
+                        results.append("  🏆 Awards related to artists in this genre (").append(genreAwards.size()).append("):\n");
+                        for (var award : genreAwards) {
+                            results.append("    • ").append(award.getAwardName())
+                                   .append(" (").append(award.getYearWon()).append(")\n");
+                        }
+                    }
+                } else {
+                    results.append("  No songs found in this genre.\n");
+                }
+            }
+            results.append("\n");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean searchArtists(String searchTerm, StringBuilder results) {
         results.append("ARTISTS:\n");
         var artists = musicService.getArtistDAO().getAllArtists();
         boolean found = false;
 
         for (var artist : artists) {
-            if (artist.getName().toLowerCase().contains(searchTerm.toLowerCase()) ||
-                (artist.getCountry() != null && artist.getCountry().toLowerCase().contains(searchTerm.toLowerCase()))) {
+            // Only match by artist name, not country, for cleaner results
+            if (artist.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
                 results.append("  • ").append(artist.getName());
                 if (artist.getCountry() != null) {
                     results.append(" (").append(artist.getCountry()).append(")");
@@ -423,9 +903,10 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             results.append("  No artists found.\n");
         }
         results.append("\n");
+        return found;
     }
 
-    private void searchAlbums(String searchTerm, StringBuilder results) {
+    private boolean searchAlbums(String searchTerm, StringBuilder results) {
         results.append("ALBUMS:\n");
         var albums = musicService.getAlbumDAO().getAllAlbums();
         boolean found = false;
@@ -445,9 +926,10 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             results.append("  No albums found.\n");
         }
         results.append("\n");
+        return found;
     }
 
-    private void searchSongs(String searchTerm, StringBuilder results) {
+    private boolean searchSongs(String searchTerm, StringBuilder results) {
         results.append("SONGS:\n");
         var songs = musicService.getSongDAO().getAllSongs();
         boolean found = false;
@@ -470,9 +952,10 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             results.append("  No songs found.\n");
         }
         results.append("\n");
+        return found;
     }
 
-    private void searchGenres(String searchTerm, StringBuilder results) {
+    private boolean searchGenres(String searchTerm, StringBuilder results) {
         results.append("GENRES:\n");
         var genres = musicService.getGenreDAO().getAllGenres();
         boolean found = false;
@@ -493,9 +976,10 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             results.append("  No genres found.\n");
         }
         results.append("\n");
+        return found;
     }
 
-    private void searchAwards(String searchTerm, StringBuilder results) {
+    private boolean searchAwards(String searchTerm, StringBuilder results) {
         results.append("AWARDS:\n");
         var awards = musicService.getAwardDAO().getAllAwards();
         boolean found = false;
@@ -513,6 +997,37 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             results.append("  No awards found.\n");
         }
         results.append("\n");
+        return found;
+    }
+
+    private boolean searchArtistsByCountry(String searchTerm, StringBuilder results) {
+        var artists = musicService.getArtistDAO().getAllArtists();
+        var artistsByCountry = new java.util.ArrayList<model.Artist>();
+
+        for (var artist : artists) {
+            if (artist.getCountry() != null &&
+                artist.getCountry().toLowerCase().contains(searchTerm.toLowerCase()) &&
+                !artist.getName().toLowerCase().contains(searchTerm.toLowerCase())) { // Avoid duplicates
+                artistsByCountry.add(artist);
+            }
+        }
+
+        if (!artistsByCountry.isEmpty()) {
+            results.append("ARTISTS FROM MATCHING COUNTRIES:\n");
+            for (var artist : artistsByCountry) {
+                results.append("  • ").append(artist.getName());
+                if (artist.getCountry() != null) {
+                    results.append(" (").append(artist.getCountry()).append(")");
+                }
+                if (artist.getBirthYear() != null) {
+                    results.append(" - Born: ").append(artist.getBirthYear());
+                }
+                results.append("\n");
+            }
+            results.append("\n");
+            return true;
+        }
+        return false;
     }
 
     private void showAdvancedSearchDialog() {
@@ -554,7 +1069,7 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
     private void showBrowseDialog() {
         String[] options = {
             "Browse by Genre",
-            "Browse by Year",
+            "Browse by Year Range",
             "Browse by Country",
             "Browse by Album"
         };
@@ -574,7 +1089,7 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                 case "Browse by Genre":
                     browseByGenre();
                     break;
-                case "Browse by Year":
+                case "Browse by Year Range":
                     browseByYear();
                     break;
                 case "Browse by Country":
@@ -605,22 +1120,84 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
         stats.append("  • Genres: ").append(genres.size()).append("\n");
         stats.append("  • Awards: ").append(awards.size()).append("\n\n");
 
-        // Additional statistics
+        // Music statistics with proper formatting (matching console version)
         if (!songs.isEmpty()) {
-            int totalDuration = songs.stream()
-                .filter(s -> s.getDuration() != null)
-                .mapToInt(s -> s.getDuration())
-                .sum();
-            stats.append("Total Music Duration: ").append(totalDuration).append(" seconds\n");
-            stats.append("Average Song Duration: ").append(totalDuration / songs.size()).append(" seconds\n\n");
+            int totalDuration = 0;
+            int songsWithDuration = 0;
+            for (var song : songs) {
+                if (song.getDuration() != null) {
+                    totalDuration += song.getDuration();
+                    songsWithDuration++;
+                }
+            }
+
+            if (songsWithDuration > 0) {
+                int hours = totalDuration / 3600;
+                int minutes = (totalDuration % 3600) / 60;
+                int seconds = totalDuration % 60;
+
+                stats.append("Music Statistics:\n");
+                stats.append("  • Total music duration: ").append(hours).append("h ")
+                     .append(minutes).append("m ").append(seconds).append("s\n");
+                stats.append("  • Average song duration: ").append(totalDuration / songsWithDuration)
+                     .append(" seconds\n\n");
+            }
         }
 
-        if (!artists.isEmpty()) {
-            long artistsWithBirthYear = artists.stream()
-                .filter(a -> a.getBirthYear() != null)
-                .count();
-            stats.append("Artists with Birth Year: ").append(artistsWithBirthYear).append("\n");
+        // Year Range Statistics (matching console version exactly)
+        if (!songs.isEmpty()) {
+            Integer earliestYear = null;
+            Integer latestYear = null;
+
+            for (var song : songs) {
+                if (song.getReleaseYear() != null) {
+                    if (earliestYear == null || song.getReleaseYear() < earliestYear) {
+                        earliestYear = song.getReleaseYear();
+                    }
+                    if (latestYear == null || song.getReleaseYear() > latestYear) {
+                        latestYear = song.getReleaseYear();
+                    }
+                }
+            }
+
+            if (earliestYear != null && latestYear != null) {
+                stats.append("Year Range:\n");
+                stats.append("  • Earliest song: ").append(earliestYear).append("\n");
+                stats.append("  • Latest song: ").append(latestYear).append("\n");
+                stats.append("  • Span: ").append(latestYear - earliestYear).append(" years\n\n");
+            }
         }
+
+        // Country diversity statistics (matching console version)
+        if (!artists.isEmpty()) {
+            var countries = new java.util.ArrayList<String>();
+            for (var artist : artists) {
+                if (artist.getCountry() != null && !countries.contains(artist.getCountry())) {
+                    countries.add(artist.getCountry());
+                }
+            }
+            stats.append("Country Diversity:\n");
+            stats.append("  • Artists from ").append(countries.size()).append(" different countries\n\n");
+        }
+
+        // Relationship statistics (matching console version exactly)
+        int totalPerformances = 0;
+        int totalArtistAwards = 0;
+        int totalSongGenres = 0;
+
+        for (var artist : artists) {
+            totalPerformances += musicService.getSongsByArtist(artist.getArtistId()).size();
+            totalArtistAwards += musicService.getAwardsByArtist(artist.getArtistId()).size();
+        }
+
+        for (var song : songs) {
+            totalSongGenres += musicService.getGenresBySong(song.getSongId()).size();
+        }
+
+        stats.append("Relationship Statistics:\n");
+        stats.append("  • Total performances: ").append(totalPerformances).append("\n");
+        stats.append("  • Total artist-award relationships: ").append(totalArtistAwards).append("\n");
+        stats.append("  • Total song-genre relationships: ").append(totalSongGenres).append("\n");
 
         // Set the statistics text and ensure proper display
         resultsArea.setText(stats.toString());
@@ -815,12 +1392,13 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
             StringBuilder results = new StringBuilder();
             results.append("Multi-criteria search results:\n\n");
 
-            // Search artists
-            var artists = musicService.getArtistDAO().getAllArtists();
-            boolean foundArtists = false;
-            results.append("MATCHING ARTISTS:\n");
+            // Get all artists and songs for filtering
+            var allArtists = musicService.getArtistDAO().getAllArtists();
+            var allSongs = musicService.getSongDAO().getAllSongs();
 
-            for (var artist : artists) {
+            // Filter artists based on criteria
+            var matchingArtists = new java.util.ArrayList<model.Artist>();
+            for (var artist : allArtists) {
                 boolean matches = true;
 
                 if (!artistName.isEmpty() &&
@@ -834,40 +1412,98 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                 }
 
                 if (matches) {
+                    matchingArtists.add(artist);
+                }
+            }
+
+            // Filter songs based on criteria
+            var matchingSongs = new java.util.ArrayList<model.Song>();
+            for (var song : allSongs) {
+                if (!songTitle.isEmpty() &&
+                    (song.getTitle() == null || !song.getTitle().toLowerCase().contains(songTitle.toLowerCase()))) {
+                    continue;
+                }
+                matchingSongs.add(song);
+            }
+
+            // Display results with relationships
+            boolean hasResults = false;
+
+            // Show matching artists and their songs (only if artist or country filter was specified)
+            if (!matchingArtists.isEmpty() && (!artistName.isEmpty() || !country.isEmpty())) {
+                results.append("MATCHING ARTISTS:\n");
+                for (var artist : matchingArtists) {
                     results.append("  • ").append(artist.getName());
                     if (artist.getCountry() != null) {
                         results.append(" (").append(artist.getCountry()).append(")");
                     }
                     results.append("\n");
-                    foundArtists = true;
+
+                    // Get songs by this artist
+                    var artistSongs = musicService.getSongsByArtist(artist.getArtistId());
+                    if (!artistSongs.isEmpty()) {
+                        // If song title filter is specified, only show matching songs
+                        if (!songTitle.isEmpty()) {
+                            var filteredArtistSongs = new java.util.ArrayList<model.Song>();
+                            for (var song : artistSongs) {
+                                if (song.getTitle().toLowerCase().contains(songTitle.toLowerCase())) {
+                                    filteredArtistSongs.add(song);
+                                }
+                            }
+                            if (!filteredArtistSongs.isEmpty()) {
+                                results.append("    Songs:\n");
+                                for (var song : filteredArtistSongs) {
+                                    results.append("      * ").append(song.getTitle());
+                                    if (song.getFormattedDuration() != null) {
+                                        results.append(" (").append(song.getFormattedDuration()).append(")");
+                                    }
+                                    results.append("\n");
+                                }
+                            }
+                        } else {
+                            // Show all songs by this artist
+                            results.append("    Songs:\n");
+                            for (var song : artistSongs) {
+                                results.append("      * ").append(song.getTitle());
+                                if (song.getFormattedDuration() != null) {
+                                    results.append(" (").append(song.getFormattedDuration()).append(")");
+                                }
+                                results.append("\n");
+                            }
+                        }
+                    }
                 }
+                hasResults = true;
             }
 
-            if (!foundArtists) {
-                results.append("  No matching artists found.\n");
+            // Show matching songs and their artists (only if song filter was specified and no artist/country filter)
+            if (!matchingSongs.isEmpty() && !songTitle.isEmpty() && artistName.isEmpty() && country.isEmpty()) {
+                results.append("MATCHING SONGS:\n");
+                for (var song : matchingSongs) {
+                    results.append("  • ").append(song.getTitle());
+                    if (song.getFormattedDuration() != null) {
+                        results.append(" (").append(song.getFormattedDuration()).append(")");
+                    }
+                    results.append("\n");
+
+                    // Get artists who perform this song
+                    var songArtists = musicService.getArtistsBySong(song.getSongId());
+                    if (!songArtists.isEmpty()) {
+                        results.append("    Performed by:\n");
+                        for (var artist : songArtists) {
+                            results.append("      * ").append(artist.getName());
+                            if (artist.getCountry() != null) {
+                                results.append(" (").append(artist.getCountry()).append(")");
+                            }
+                            results.append("\n");
+                        }
+                    }
+                }
+                hasResults = true;
             }
 
-            // Search songs
-            var songs = musicService.getSongDAO().getAllSongs();
-            boolean foundSongs = false;
-            results.append("\nMATCHING SONGS:\n");
-
-            for (var song : songs) {
-                if (!songTitle.isEmpty() &&
-                    (song.getTitle() == null || !song.getTitle().toLowerCase().contains(songTitle.toLowerCase()))) {
-                    continue;
-                }
-
-                results.append("  • ").append(song.getTitle());
-                if (song.getFormattedDuration() != null) {
-                    results.append(" (").append(song.getFormattedDuration()).append(")");
-                }
-                results.append("\n");
-                foundSongs = true;
-            }
-
-            if (!foundSongs) {
-                results.append("  No matching songs found.\n");
+            if (!hasResults) {
+                results.append("No results found matching the specified criteria.");
             }
 
             resultsArea.setText(results.toString());
@@ -919,13 +1555,51 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
     }
 
     private void browseByYear() {
-        String yearStr = JOptionPane.showInputDialog(this, "Enter year to browse:");
-        if (yearStr != null) {
+        // Create a panel for year range input
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        JTextField startYearField = new JTextField(10);
+        JTextField endYearField = new JTextField(10);
+
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("Start Year:"), gbc);
+        gbc.gridx = 1;
+        panel.add(startYearField, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("End Year:"), gbc);
+        gbc.gridx = 1;
+        panel.add(endYearField, gbc);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Browse by Year Range",
+                                                  JOptionPane.OK_CANCEL_OPTION);
+
+        if (result == JOptionPane.OK_OPTION) {
+            String startYearStr = startYearField.getText().trim();
+            String endYearStr = endYearField.getText().trim();
+
+            if (startYearStr.isEmpty() || endYearStr.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter both start and end years.",
+                                            "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             try {
-                int year = Integer.parseInt(yearStr);
+                int startYear = Integer.parseInt(startYearStr);
+                int endYear = Integer.parseInt(endYearStr);
+
+                if (startYear > endYear) {
+                    JOptionPane.showMessageDialog(this, "Start year cannot be greater than end year.",
+                                                "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
                 StringBuilder results = new StringBuilder();
-                results.append("Content from ").append(year).append(":\n\n");
+                results.append("Content from ").append(startYear).append(" to ").append(endYear)
+                       .append(" (inclusive):\n\n");
 
                 // Search songs
                 var songs = musicService.getSongDAO().getAllSongs();
@@ -933,8 +1607,11 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                 results.append("SONGS:\n");
 
                 for (var song : songs) {
-                    if (song.getReleaseYear() != null && song.getReleaseYear() == year) {
-                        results.append("  • ").append(song.getTitle()).append("\n");
+                    if (song.getReleaseYear() != null &&
+                        song.getReleaseYear() >= startYear &&
+                        song.getReleaseYear() <= endYear) {
+                        results.append("  • ").append(song.getTitle())
+                               .append(" (").append(song.getReleaseYear()).append(")\n");
                         foundSongs = true;
                     }
                 }
@@ -949,8 +1626,11 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                 results.append("\nALBUMS:\n");
 
                 for (var album : albums) {
-                    if (album.getReleaseYear() != null && album.getReleaseYear() == year) {
-                        results.append("  • ").append(album.getTitle()).append("\n");
+                    if (album.getReleaseYear() != null &&
+                        album.getReleaseYear() >= startYear &&
+                        album.getReleaseYear() <= endYear) {
+                        results.append("  • ").append(album.getTitle())
+                               .append(" (").append(album.getReleaseYear()).append(")\n");
                         foundAlbums = true;
                     }
                 }
@@ -965,8 +1645,9 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                 results.append("\nAWARDS:\n");
 
                 for (var award : awards) {
-                    if (award.getYearWon() == year) {
-                        results.append("  • ").append(award.getAwardName()).append("\n");
+                    if (award.getYearWon() >= startYear && award.getYearWon() <= endYear) {
+                        results.append("  • ").append(award.getAwardName())
+                               .append(" (").append(award.getYearWon()).append(")\n");
                         foundAwards = true;
                     }
                 }
@@ -975,10 +1656,15 @@ public class SearchPanel extends JPanel implements RefreshablePanel {
                     results.append("  No awards found.\n");
                 }
 
+                if (!foundSongs && !foundAlbums && !foundAwards) {
+                    results.append("\nNo content found for years ").append(startYear)
+                           .append(" to ").append(endYear).append(".");
+                }
+
                 resultsArea.setText(results.toString());
                 resultsArea.setCaretPosition(0);
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Please enter a valid year.",
+                JOptionPane.showMessageDialog(this, "Please enter valid years.",
                                             "Invalid Input", JOptionPane.ERROR_MESSAGE);
             }
         }

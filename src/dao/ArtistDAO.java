@@ -321,6 +321,60 @@ public class ArtistDAO {
         return false;
     }
 
+    /**
+     * Get all artists who received a specific award with their roles
+     */
+    public List<Artist> getArtistsByAwardId(int awardId) {
+        List<Artist> artists = new ArrayList<>();
+        String sql = "SELECT a.*, r.role FROM artists a " +
+                    "JOIN receives r ON a.artist_id = r.artist_id " +
+                    "WHERE r.award_id = ? ORDER BY a.name";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, awardId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Artist artist = mapResultSetToArtist(rs);
+                // Store the role in a temporary way - we'll handle this in the service layer
+                artists.add(artist);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting artists by award: " + e.getMessage());
+        }
+        return artists;
+    }
+
+    /**
+     * Get artist-role pairs for a specific award
+     */
+    public List<String[]> getArtistRolesByAwardId(int awardId) {
+        List<String[]> artistRoles = new ArrayList<>();
+        String sql = "SELECT a.name, a.country, r.role FROM artists a " +
+                    "JOIN receives r ON a.artist_id = r.artist_id " +
+                    "WHERE r.award_id = ? ORDER BY a.name";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, awardId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String[] artistRole = new String[3];
+                artistRole[0] = rs.getString("name");
+                artistRole[1] = rs.getString("country");
+                artistRole[2] = rs.getString("role");
+                artistRoles.add(artistRole);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting artist roles by award: " + e.getMessage());
+        }
+        return artistRoles;
+    }
+
     // Helper method to map ResultSet to Artist object
     private Artist mapResultSetToArtist(ResultSet rs) throws SQLException {
         Artist artist = new Artist();

@@ -5,6 +5,8 @@ import model.*;
 import util.InputHelper;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Controller class for managing search and browse operations
@@ -51,62 +53,422 @@ public class SearchController {
     }
 
     /**
-     * Performs a global search across all entities
+     * Performs a comprehensive global search across all entities and their relationships
      */
     private void globalSearch() {
-        System.out.println("\n--- Global Search ---");
+        System.out.println("\n🌐 --- Global Search ---");
         String searchTerm = inputHelper.getStringInput("Enter search term: ");
 
-        System.out.println("\nSearch Results for: '" + searchTerm + "'");
+        System.out.println("\n🌐 Global Search Results for: '" + searchTerm + "'");
+        System.out.println("=".repeat(60));
 
-        // Search artists
-        List<Artist> artists = musicService.getArtistDAO().searchArtistsByName(searchTerm);
-        if (!artists.isEmpty()) {
-            System.out.println("\nArtists:");
-            for (Artist artist : artists) {
-                System.out.println("  - " + artist.getName() + " (" + artist.getCountry() + ")");
+        boolean foundAnyResults = false;
+
+        // Search for direct matches first
+        foundAnyResults |= searchDirectMatches(searchTerm);
+
+        // Search for related entities based on direct matches
+        foundAnyResults |= searchRelatedEntities(searchTerm);
+
+        if (!foundAnyResults) {
+            System.out.println("No results found for '" + searchTerm + "' across any entities.");
+        }
+    }
+
+    /**
+     * Search for direct matches in all entity types
+     */
+    private boolean searchDirectMatches(String searchTerm) {
+        boolean foundAny = false;
+
+        // Search artists (by name only, not country)
+        List<Artist> artists = new ArrayList<>();
+        List<Artist> allArtists = musicService.getArtistDAO().getAllArtists();
+        for (Artist artist : allArtists) {
+            if (artist.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                artists.add(artist);
             }
+        }
+        if (!artists.isEmpty()) {
+            System.out.println("\nARTISTS:");
+            for (Artist artist : artists) {
+                System.out.println("  • " + artist.getName() + " (" + artist.getCountry() + ")");
+                if (artist.getBirthYear() != null) {
+                    System.out.println("    Born: " + artist.getBirthYear());
+                }
+            }
+            foundAny = true;
         }
 
         // Search songs
         List<Song> songs = musicService.getSongDAO().searchSongsByTitle(searchTerm);
         if (!songs.isEmpty()) {
-            System.out.println("\nSongs:");
+            System.out.println("\nSONGS:");
             for (Song song : songs) {
-                System.out.println("  - " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+                System.out.println("  • " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+                if (song.getReleaseYear() != null) {
+                    System.out.println("    Released: " + song.getReleaseYear());
+                }
             }
+            foundAny = true;
         }
 
         // Search albums
         List<Album> albums = musicService.getAlbumDAO().searchAlbumsByTitle(searchTerm);
         if (!albums.isEmpty()) {
-            System.out.println("\nAlbums:");
+            System.out.println("\nALBUMS:");
             for (Album album : albums) {
-                System.out.println("  - " + album.getTitle() + " (" + album.getReleaseYear() + ")");
+                System.out.println("  • " + album.getTitle() + " (" + album.getReleaseYear() + ")");
             }
+            foundAny = true;
         }
 
         // Search genres
         List<Genre> genres = musicService.getGenreDAO().searchGenresByName(searchTerm);
         if (!genres.isEmpty()) {
-            System.out.println("\nGenres:");
+            System.out.println("\nGENRES:");
             for (Genre genre : genres) {
-                System.out.println("  - " + genre.getName() + ": " + genre.getDescription());
+                System.out.println("  • " + genre.getName() + ": " + genre.getDescription());
             }
+            foundAny = true;
         }
 
         // Search awards
         List<Award> awards = musicService.getAwardDAO().searchAwardsByName(searchTerm);
         if (!awards.isEmpty()) {
-            System.out.println("\nAwards:");
+            System.out.println("\nAWARDS:");
             for (Award award : awards) {
-                System.out.println("  - " + award.getAwardName() + " (" + award.getYearWon() + ")");
+                System.out.println("  • " + award.getAwardName() + " (" + award.getYearWon() + ")");
+            }
+            foundAny = true;
+        }
+
+        // Search artists by country (separate section)
+        List<Artist> artistsByCountry = new ArrayList<>();
+        for (Artist artist : allArtists) {
+            if (artist.getCountry() != null &&
+                artist.getCountry().toLowerCase().contains(searchTerm.toLowerCase()) &&
+                !artist.getName().toLowerCase().contains(searchTerm.toLowerCase())) { // Avoid duplicates
+                artistsByCountry.add(artist);
+            }
+        }
+        if (!artistsByCountry.isEmpty()) {
+            System.out.println("\nARTISTS FROM MATCHING COUNTRIES:");
+            for (Artist artist : artistsByCountry) {
+                System.out.println("  • " + artist.getName() + " (" + artist.getCountry() + ")");
+                if (artist.getBirthYear() != null) {
+                    System.out.println("    Born: " + artist.getBirthYear());
+                }
+            }
+            foundAny = true;
+        }
+
+        return foundAny;
+    }
+
+    /**
+     * Search for entities related to the direct matches
+     */
+    private boolean searchRelatedEntities(String searchTerm) {
+        boolean foundAny = false;
+
+        // Find matching artists and show their related content
+        foundAny |= searchArtistRelatedContent(searchTerm);
+
+        // Find matching songs and show their related content
+        foundAny |= searchSongRelatedContent(searchTerm);
+
+        // Find matching albums and show their related content
+        foundAny |= searchAlbumRelatedContent(searchTerm);
+
+        // Find matching genres and show their related content
+        foundAny |= searchGenreRelatedContent(searchTerm);
+
+        return foundAny;
+    }
+
+    /**
+     * Search for content related to matching artists
+     */
+    private boolean searchArtistRelatedContent(String searchTerm) {
+        List<Artist> matchingArtists = new ArrayList<>();
+        List<Artist> allArtists = musicService.getArtistDAO().getAllArtists();
+        for (Artist artist : allArtists) {
+            // Only match by artist name, not country, for cleaner results
+            if (artist.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingArtists.add(artist);
             }
         }
 
-        if (artists.isEmpty() && songs.isEmpty() && albums.isEmpty() && genres.isEmpty() && awards.isEmpty()) {
-            System.out.println("No results found for: '" + searchTerm + "'");
+        if (!matchingArtists.isEmpty()) {
+            System.out.println("\n🎤 RELATED CONTENT FOR MATCHING ARTISTS:");
+
+            for (Artist artist : matchingArtists) {
+                System.out.println("\n📍 " + artist.getName() + ":");
+
+                // Show artist's songs
+                List<Song> artistSongs = musicService.getSongsByArtist(artist.getArtistId());
+                if (!artistSongs.isEmpty()) {
+                    System.out.println("  🎵 Songs:");
+                    for (Song song : artistSongs) {
+                        System.out.println("    • " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+                    }
+                }
+
+                // Show albums containing artist's songs
+                List<Album> artistAlbums = new ArrayList<>();
+                List<Album> allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                for (Album album : allAlbums) {
+                    List<Song> albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                    for (Song albumSong : albumSongs) {
+                        for (Song artistSong : artistSongs) {
+                            if (albumSong.getSongId() == artistSong.getSongId()) {
+                                if (!artistAlbums.contains(album)) {
+                                    artistAlbums.add(album);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!artistAlbums.isEmpty()) {
+                    System.out.println("  💿 Albums:");
+                    for (Album album : artistAlbums) {
+                        System.out.println("    • " + album.getTitle() + " (" + album.getReleaseYear() + ")");
+                    }
+                }
+
+                // Show artist's awards
+                List<Award> artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                if (!artistAwards.isEmpty()) {
+                    System.out.println("  🏆 Awards:");
+                    for (Award award : artistAwards) {
+                        System.out.println("    • " + award.getAwardName() + " (" + award.getYearWon() + ")");
+                    }
+                }
+
+                // Show genres of artist's songs
+                List<Genre> artistGenres = new ArrayList<>();
+                for (Song song : artistSongs) {
+                    List<Genre> genresForSong = musicService.getGenresBySong(song.getSongId());
+                    for (Genre genre : genresForSong) {
+                        if (!artistGenres.contains(genre)) {
+                            artistGenres.add(genre);
+                        }
+                    }
+                }
+                if (!artistGenres.isEmpty()) {
+                    System.out.println("  🎭 Genres:");
+                    for (Genre genre : artistGenres) {
+                        System.out.println("    • " + genre.getName() + " - " + genre.getDescription());
+                    }
+                }
+            }
+            System.out.println();
+            return true;
         }
+        return false;
+    }
+
+    /**
+     * Search for content related to matching songs
+     */
+    private boolean searchSongRelatedContent(String searchTerm) {
+        List<Song> matchingSongs = new ArrayList<>();
+        List<Song> allSongs = musicService.getSongDAO().getAllSongs();
+        for (Song song : allSongs) {
+            if (song.getTitle().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingSongs.add(song);
+            }
+        }
+
+        if (!matchingSongs.isEmpty()) {
+            System.out.println("\n🎵 RELATED CONTENT FOR MATCHING SONGS:");
+
+            for (Song song : matchingSongs) {
+                System.out.print("\n🎶 " + song.getTitle());
+                if (song.getFormattedDuration() != null) {
+                    System.out.print(" (" + song.getFormattedDuration() + ")");
+                }
+                if (song.getReleaseYear() != null) {
+                    System.out.print(" - " + song.getReleaseYear());
+                }
+                System.out.println(":");
+
+                // Show artists who perform this song
+                List<Artist> songArtists = musicService.getArtistsBySong(song.getSongId());
+                if (!songArtists.isEmpty()) {
+                    System.out.println("  🎤 Performed by:");
+                    for (Artist artist : songArtists) {
+                        System.out.println("    • " + artist.getName() + " (" + artist.getCountry() + ")");
+                    }
+                }
+
+                // Show albums containing this song
+                List<Album> songAlbums = new ArrayList<>();
+                List<Album> allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                for (Album album : allAlbums) {
+                    List<Song> albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                    for (Song albumSong : albumSongs) {
+                        if (albumSong.getSongId() == song.getSongId()) {
+                            songAlbums.add(album);
+                            break;
+                        }
+                    }
+                }
+                if (!songAlbums.isEmpty()) {
+                    System.out.println("  💿 Featured in Albums:");
+                    for (Album album : songAlbums) {
+                        System.out.println("    • " + album.getTitle() + " (" + album.getReleaseYear() + ")");
+                    }
+                }
+
+                // Show genres of this song
+                List<Genre> songGenres = musicService.getGenresBySong(song.getSongId());
+                if (!songGenres.isEmpty()) {
+                    System.out.println("  🎭 Genres:");
+                    for (Genre genre : songGenres) {
+                        System.out.println("    • " + genre.getName() + " - " + genre.getDescription());
+                    }
+                }
+
+                // Show awards related to the artists of this song
+                List<Award> relatedAwards = new ArrayList<>();
+                for (Artist artist : songArtists) {
+                    List<Award> artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                    for (Award award : artistAwards) {
+                        if (!relatedAwards.contains(award)) {
+                            relatedAwards.add(award);
+                        }
+                    }
+                }
+                if (!relatedAwards.isEmpty()) {
+                    System.out.println("  🏆 Related Awards (Artist Awards):");
+                    for (Award award : relatedAwards) {
+                        System.out.println("    • " + award.getAwardName() + " (" + award.getYearWon() + ")");
+                    }
+                }
+            }
+            System.out.println();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Search for content related to matching albums
+     */
+    private boolean searchAlbumRelatedContent(String searchTerm) {
+        List<Album> matchingAlbums = new ArrayList<>();
+        List<Album> allAlbums = musicService.getAlbumDAO().getAllAlbums();
+        for (Album album : allAlbums) {
+            if (album.getTitle().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingAlbums.add(album);
+            }
+        }
+
+        if (!matchingAlbums.isEmpty()) {
+            System.out.println("\n💿 RELATED CONTENT FOR MATCHING ALBUMS:");
+
+            for (Album album : matchingAlbums) {
+                System.out.print("\n💽 " + album.getTitle());
+                if (album.getReleaseYear() != null) {
+                    System.out.print(" (" + album.getReleaseYear() + ")");
+                }
+                System.out.println(":");
+
+                // Show songs in this album
+                List<Song> albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                if (!albumSongs.isEmpty()) {
+                    System.out.println("  🎵 Songs in Album:");
+                    int totalDuration = 0;
+                    for (Song song : albumSongs) {
+                        System.out.print("    • " + song.getTitle());
+                        if (song.getFormattedDuration() != null) {
+                            System.out.print(" (" + song.getFormattedDuration() + ")");
+                        }
+                        if (song.getReleaseYear() != null) {
+                            System.out.print(" - " + song.getReleaseYear());
+                        }
+                        System.out.println();
+
+                        // Calculate total duration
+                        if (song.getDuration() != null) {
+                            totalDuration += song.getDuration();
+                        }
+                    }
+
+                    // Show album statistics
+                    System.out.print("    📊 Album Stats: " + albumSongs.size() + " songs");
+                    if (totalDuration > 0) {
+                        int minutes = totalDuration / 60;
+                        int seconds = totalDuration % 60;
+                        System.out.print(", Total Duration: " + minutes + ":" + String.format("%02d", seconds));
+                    }
+                    System.out.println();
+                }
+
+                // Show artists who have songs in this album
+                List<Artist> albumArtists = new ArrayList<>();
+                for (Song song : albumSongs) {
+                    List<Artist> songArtists = musicService.getArtistsBySong(song.getSongId());
+                    for (Artist artist : songArtists) {
+                        if (!albumArtists.contains(artist)) {
+                            albumArtists.add(artist);
+                        }
+                    }
+                }
+                if (!albumArtists.isEmpty()) {
+                    System.out.println("  🎤 Featured Artists:");
+                    for (Artist artist : albumArtists) {
+                        System.out.println("    • " + artist.getName() + " (" + artist.getCountry() + ")");
+                    }
+                }
+
+                // Show genres of songs in this album
+                List<Genre> albumGenres = new ArrayList<>();
+                for (Song song : albumSongs) {
+                    List<Genre> songGenres = musicService.getGenresBySong(song.getSongId());
+                    for (Genre genre : songGenres) {
+                        if (!albumGenres.contains(genre)) {
+                            albumGenres.add(genre);
+                        }
+                    }
+                }
+                if (!albumGenres.isEmpty()) {
+                    System.out.println("  🎭 Album Genres:");
+                    for (Genre genre : albumGenres) {
+                        System.out.println("    • " + genre.getName() + " - " + genre.getDescription());
+                    }
+                }
+
+                // Show awards related to the artists in this album
+                List<Award> relatedAwards = new ArrayList<>();
+                for (Artist artist : albumArtists) {
+                    List<Award> artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                    for (Award award : artistAwards) {
+                        if (!relatedAwards.contains(award)) {
+                            relatedAwards.add(award);
+                        }
+                    }
+                }
+                if (!relatedAwards.isEmpty()) {
+                    System.out.println("  🏆 Related Awards (Artist Awards):");
+                    for (Award award : relatedAwards) {
+                        System.out.println("    • " + award.getAwardName() + " (" + award.getYearWon() + ")");
+                    }
+                }
+
+                // Show total songs metadata from album relationship
+                int totalSongsMetadata = musicService.getTotalSongsInAlbum(album.getAlbumId());
+                if (totalSongsMetadata > 0) {
+                    System.out.println("  📀 Album Metadata: Total songs declared: " + totalSongsMetadata);
+                }
+            }
+            System.out.println();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -115,7 +477,7 @@ public class SearchController {
     private void browseByCategory() {
         System.out.println("\n--- Browse by Category ---");
         System.out.println("1. Browse by Genre");
-        System.out.println("2. Browse by Year");
+        System.out.println("2. Browse by Year Range");
         System.out.println("3. Browse by Country");
         System.out.println("4. Browse by Album");
 
@@ -137,6 +499,98 @@ public class SearchController {
             default:
                 System.out.println("Invalid choice.");
         }
+    }
+
+    /**
+     * Search for content related to matching genres
+     */
+    private boolean searchGenreRelatedContent(String searchTerm) {
+        List<Genre> matchingGenres = new ArrayList<>();
+        List<Genre> allGenres = musicService.getGenreDAO().getAllGenres();
+        for (Genre genre : allGenres) {
+            if (genre.getName().toLowerCase().contains(searchTerm.toLowerCase())) {
+                matchingGenres.add(genre);
+            }
+        }
+
+        if (!matchingGenres.isEmpty()) {
+            System.out.println("\n🎭 RELATED CONTENT FOR MATCHING GENRES:");
+
+            for (Genre genre : matchingGenres) {
+                System.out.println("\n📂 Genre: " + genre.getName());
+                if (genre.getDescription() != null) {
+                    System.out.println("  Description: " + genre.getDescription());
+                }
+
+                // Get all songs in this genre
+                List<Song> genreSongs = musicService.getSongsByGenre(genre.getGenreId());
+                if (!genreSongs.isEmpty()) {
+                    System.out.println("  🎵 Songs in this genre (" + genreSongs.size() + "):");
+                    for (Song song : genreSongs) {
+                        System.out.println("    • " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+                        if (song.getReleaseYear() != null) {
+                            System.out.println("      Released: " + song.getReleaseYear());
+                        }
+                    }
+
+                    // Get all artists who perform songs in this genre
+                    Set<Artist> genreArtists = new HashSet<>();
+                    for (Song song : genreSongs) {
+                        List<Artist> songArtists = musicService.getArtistsBySong(song.getSongId());
+                        genreArtists.addAll(songArtists);
+                    }
+
+                    if (!genreArtists.isEmpty()) {
+                        System.out.println("  🎤 Artists performing in this genre (" + genreArtists.size() + "):");
+                        for (Artist artist : genreArtists) {
+                            System.out.println("    • " + artist.getName() + " (" + artist.getCountry() + ")");
+                        }
+                    }
+
+                    // Get all albums containing songs from this genre
+                    Set<Album> genreAlbums = new HashSet<>();
+                    for (Song song : genreSongs) {
+                        // Find albums containing this song
+                        List<Album> allAlbums = musicService.getAlbumDAO().getAllAlbums();
+                        for (Album album : allAlbums) {
+                            List<Song> albumSongs = musicService.getSongsByAlbum(album.getAlbumId());
+                            for (Song albumSong : albumSongs) {
+                                if (albumSong.getSongId() == song.getSongId()) {
+                                    genreAlbums.add(album);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!genreAlbums.isEmpty()) {
+                        System.out.println("  💿 Albums containing songs from this genre (" + genreAlbums.size() + "):");
+                        for (Album album : genreAlbums) {
+                            System.out.println("    • " + album.getTitle() + " (" + album.getReleaseYear() + ")");
+                        }
+                    }
+
+                    // Get all awards related to artists in this genre
+                    Set<Award> genreAwards = new HashSet<>();
+                    for (Artist artist : genreArtists) {
+                        List<Award> artistAwards = musicService.getAwardsByArtist(artist.getArtistId());
+                        genreAwards.addAll(artistAwards);
+                    }
+
+                    if (!genreAwards.isEmpty()) {
+                        System.out.println("  🏆 Awards related to artists in this genre (" + genreAwards.size() + "):");
+                        for (Award award : genreAwards) {
+                            System.out.println("    • " + award.getAwardName() + " (" + award.getYearWon() + ")");
+                        }
+                    }
+                } else {
+                    System.out.println("  No songs found in this genre.");
+                }
+            }
+            System.out.println();
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -177,56 +631,74 @@ public class SearchController {
     }
 
     /**
-     * Browses content by year
+     * Browses content by year range
      */
     private void browseByYear() {
-        int year = inputHelper.getIntInput("Enter year to browse: ");
+        int startYear = inputHelper.getIntInput("Enter start year: ");
+        int endYear = inputHelper.getIntInput("Enter end year: ");
 
-        System.out.println("\nContent from " + year + ":");
+        // Ensure start year is not greater than end year
+        if (startYear > endYear) {
+            System.out.println("Start year cannot be greater than end year.");
+            return;
+        }
 
-        // Songs from that year
+        System.out.println("\nContent from " + startYear + " to " + endYear + " (inclusive):");
+
+        // Songs from that year range
         List<Song> allSongs = musicService.getSongDAO().getAllSongs();
-        List<Song> songsFromYear = new ArrayList<>();
+        List<Song> songsFromYearRange = new ArrayList<>();
         for (Song song : allSongs) {
-            if (song.getReleaseYear() != null && song.getReleaseYear() == year) {
-                songsFromYear.add(song);
+            if (song.getReleaseYear() != null &&
+                song.getReleaseYear() >= startYear &&
+                song.getReleaseYear() <= endYear) {
+                songsFromYearRange.add(song);
             }
         }
 
-        if (!songsFromYear.isEmpty()) {
+        if (!songsFromYearRange.isEmpty()) {
             System.out.println("\nSongs:");
-            for (Song song : songsFromYear) {
-                System.out.println("  - " + song.getTitle());
+            for (Song song : songsFromYearRange) {
+                System.out.println("  - " + song.getTitle() + " (" + song.getReleaseYear() + ")");
             }
         }
 
-        // Albums from that year
+        // Albums from that year range
         List<Album> allAlbums = musicService.getAlbumDAO().getAllAlbums();
-        List<Album> albumsFromYear = new ArrayList<>();
+        List<Album> albumsFromYearRange = new ArrayList<>();
         for (Album album : allAlbums) {
-            if (album.getReleaseYear() != null && album.getReleaseYear() == year) {
-                albumsFromYear.add(album);
+            if (album.getReleaseYear() != null &&
+                album.getReleaseYear() >= startYear &&
+                album.getReleaseYear() <= endYear) {
+                albumsFromYearRange.add(album);
             }
         }
 
-        if (!albumsFromYear.isEmpty()) {
+        if (!albumsFromYearRange.isEmpty()) {
             System.out.println("\nAlbums:");
-            for (Album album : albumsFromYear) {
-                System.out.println("  - " + album.getTitle());
+            for (Album album : albumsFromYearRange) {
+                System.out.println("  - " + album.getTitle() + " (" + album.getReleaseYear() + ")");
             }
         }
 
-        // Awards from that year
-        List<Award> awards = musicService.getAwardDAO().getAwardsByYear(year);
-        if (!awards.isEmpty()) {
+        // Awards from that year range
+        List<Award> allAwards = musicService.getAwardDAO().getAllAwards();
+        List<Award> awardsFromYearRange = new ArrayList<>();
+        for (Award award : allAwards) {
+            if (award.getYearWon() >= startYear && award.getYearWon() <= endYear) {
+                awardsFromYearRange.add(award);
+            }
+        }
+
+        if (!awardsFromYearRange.isEmpty()) {
             System.out.println("\nAwards:");
-            for (Award award : awards) {
-                System.out.println("  - " + award.getAwardName());
+            for (Award award : awardsFromYearRange) {
+                System.out.println("  - " + award.getAwardName() + " (" + award.getYearWon() + ")");
             }
         }
 
-        if (songsFromYear.isEmpty() && albumsFromYear.isEmpty() && awards.isEmpty()) {
-            System.out.println("No content found for year " + year);
+        if (songsFromYearRange.isEmpty() && albumsFromYearRange.isEmpty() && awardsFromYearRange.isEmpty()) {
+            System.out.println("No content found for years " + startYear + " to " + endYear);
         }
     }
 
@@ -424,7 +896,7 @@ public class SearchController {
     }
 
     /**
-     * Performs multi-criteria search
+     * Performs multi-criteria search with relationship-based filtering
      */
     private void searchMultiCriteria() {
         System.out.println("\n--- Multi-Criteria Search ---");
@@ -436,11 +908,13 @@ public class SearchController {
 
         System.out.println("\nMulti-criteria search results:");
 
-        // Search artists
-        List<Artist> artists = musicService.getArtistDAO().getAllArtists();
-        List<Artist> filteredArtists = new ArrayList<>();
+        // Get all artists and songs for filtering
+        List<Artist> allArtists = musicService.getArtistDAO().getAllArtists();
+        List<Song> allSongs = musicService.getSongDAO().getAllSongs();
 
-        for (Artist artist : artists) {
+        // Filter artists based on criteria
+        List<Artist> matchingArtists = new ArrayList<>();
+        for (Artist artist : allArtists) {
             boolean matches = true;
 
             if (!artistName.isEmpty() &&
@@ -454,42 +928,77 @@ public class SearchController {
             }
 
             if (matches) {
-                filteredArtists.add(artist);
+                matchingArtists.add(artist);
             }
         }
 
-        if (!filteredArtists.isEmpty()) {
-            System.out.println("\nMatching Artists:");
-            for (Artist artist : filteredArtists) {
-                System.out.println("  - " + artist.getName() + " (" + artist.getCountry() + ")");
-            }
-        }
-
-        // Search songs
-        List<Song> songs = musicService.getSongDAO().getAllSongs();
-        List<Song> filteredSongs = new ArrayList<>();
-
-        for (Song song : songs) {
-            boolean matches = true;
-
+        // Filter songs based on criteria
+        List<Song> matchingSongs = new ArrayList<>();
+        for (Song song : allSongs) {
             if (!songTitle.isEmpty() &&
                 (song.getTitle() == null || !song.getTitle().toLowerCase().contains(songTitle.toLowerCase()))) {
-                matches = false;
+                continue;
             }
-
-            if (matches) {
-                filteredSongs.add(song);
-            }
+            matchingSongs.add(song);
         }
 
-        if (!filteredSongs.isEmpty()) {
+        // Display results with relationships
+        boolean hasResults = false;
+
+        // Show matching artists and their songs (only if artist or country filter was specified)
+        if (!matchingArtists.isEmpty() && (!artistName.isEmpty() || !country.isEmpty())) {
+            System.out.println("\nMatching Artists:");
+            for (Artist artist : matchingArtists) {
+                System.out.println("  - " + artist.getName() + " (" + artist.getCountry() + ")");
+
+                // Get songs by this artist
+                List<Song> artistSongs = musicService.getSongsByArtist(artist.getArtistId());
+                if (!artistSongs.isEmpty()) {
+                    // If song title filter is specified, only show matching songs
+                    if (!songTitle.isEmpty()) {
+                        List<Song> filteredArtistSongs = new ArrayList<>();
+                        for (Song song : artistSongs) {
+                            if (song.getTitle().toLowerCase().contains(songTitle.toLowerCase())) {
+                                filteredArtistSongs.add(song);
+                            }
+                        }
+                        if (!filteredArtistSongs.isEmpty()) {
+                            System.out.println("    Songs:");
+                            for (Song song : filteredArtistSongs) {
+                                System.out.println("      * " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+                            }
+                        }
+                    } else {
+                        // Show all songs by this artist
+                        System.out.println("    Songs:");
+                        for (Song song : artistSongs) {
+                            System.out.println("      * " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+                        }
+                    }
+                }
+            }
+            hasResults = true;
+        }
+
+        // Show matching songs and their artists (only if song filter was specified and no artist/country filter)
+        if (!matchingSongs.isEmpty() && !songTitle.isEmpty() && artistName.isEmpty() && country.isEmpty()) {
             System.out.println("\nMatching Songs:");
-            for (Song song : filteredSongs) {
+            for (Song song : matchingSongs) {
                 System.out.println("  - " + song.getTitle() + " [" + song.getFormattedDuration() + "]");
+
+                // Get artists who perform this song
+                List<Artist> songArtists = musicService.getArtistsBySong(song.getSongId());
+                if (!songArtists.isEmpty()) {
+                    System.out.println("    Performed by:");
+                    for (Artist artist : songArtists) {
+                        System.out.println("      * " + artist.getName() + " (" + artist.getCountry() + ")");
+                    }
+                }
             }
+            hasResults = true;
         }
 
-        if (filteredArtists.isEmpty() && filteredSongs.isEmpty()) {
+        if (!hasResults) {
             System.out.println("No results found matching the specified criteria.");
         }
     }

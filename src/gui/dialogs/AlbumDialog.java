@@ -1,89 +1,112 @@
 package gui.dialogs;
 
 import model.Album;
+import model.Song;
+import model.Artist;
+import service.MusicService;
+import gui.utils.UIConstants;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
- * Dialog for adding or editing album information
+ * Enhanced dialog for adding or editing album information with relationship management
  */
 public class AlbumDialog extends JDialog {
-    
+
+    private final MusicService musicService;
+
+    // Basic album fields
     private JTextField titleField;
     private JTextField releaseYearField;
+
+    // Relationship fields
+    private JList<Song> availableSongsList;
+    private JList<Song> selectedSongsList;
+    private DefaultListModel<Song> availableSongsModel;
+    private DefaultListModel<Song> selectedSongsModel;
+    private JTextField totalSongsField;
+
+    // Buttons
     private JButton okButton;
     private JButton cancelButton;
-    
+    private JButton addSongButton;
+    private JButton removeSongButton;
+    private JButton addAllSongsButton;
+    private JButton removeAllSongsButton;
+
     private Album album;
     private boolean confirmed = false;
-    
-    public AlbumDialog(JFrame parent, String title, Album album) {
+
+    public AlbumDialog(JFrame parent, String title, Album album, MusicService musicService) {
         super(parent, title, true);
         this.album = album;
-        
+        this.musicService = musicService;
+
         initializeComponents();
         setupLayout();
         setupEventHandlers();
         populateFields();
         configureDialog();
     }
-    
+
     private void initializeComponents() {
         titleField = new JTextField(20);
         releaseYearField = new JTextField(20);
-        
+
         okButton = new JButton("OK");
         cancelButton = new JButton("Cancel");
-        
+
         // Set tooltips
         titleField.setToolTipText("Enter the album title");
         releaseYearField.setToolTipText("Enter the album release year (optional)");
     }
-    
+
     private void setupLayout() {
         setLayout(new BorderLayout());
-        
+
         // Create form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
-        
+
         // Title field
         gbc.gridx = 0; gbc.gridy = 0;
         formPanel.add(new JLabel("Title:*"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         formPanel.add(titleField, gbc);
-        
+
         // Release year field
         gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
         formPanel.add(new JLabel("Release Year:"), gbc);
         gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
         formPanel.add(releaseYearField, gbc);
-        
+
         // Required fields note
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
         JLabel noteLabel = new JLabel("* Required fields");
         noteLabel.setFont(noteLabel.getFont().deriveFont(Font.ITALIC));
         noteLabel.setForeground(Color.GRAY);
         formPanel.add(noteLabel, gbc);
-        
+
         // Create button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
-        
+
         // Add panels to dialog
         add(formPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
-    
+
     private void setupEventHandlers() {
         okButton.addActionListener(new ActionListener() {
             @Override
@@ -95,7 +118,7 @@ public class AlbumDialog extends JDialog {
                 }
             }
         });
-        
+
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -103,10 +126,10 @@ public class AlbumDialog extends JDialog {
                 dispose();
             }
         });
-        
+
         // Enter key on OK button
         getRootPane().setDefaultButton(okButton);
-        
+
         // Escape key to cancel
         KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke("ESCAPE");
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
@@ -118,7 +141,7 @@ public class AlbumDialog extends JDialog {
             }
         });
     }
-    
+
     private void populateFields() {
         if (album != null) {
             titleField.setText(album.getTitle());
@@ -127,27 +150,27 @@ public class AlbumDialog extends JDialog {
             }
         }
     }
-    
+
     private void configureDialog() {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
         pack();
         setLocationRelativeTo(getParent());
-        
+
         // Focus on title field
         SwingUtilities.invokeLater(() -> titleField.requestFocusInWindow());
     }
-    
+
     private boolean validateInput() {
         // Validate title (required)
         String title = titleField.getText().trim();
         if (title.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Title is required!", "Validation Error", 
+            JOptionPane.showMessageDialog(this, "Title is required!", "Validation Error",
                                         JOptionPane.ERROR_MESSAGE);
             titleField.requestFocusInWindow();
             return false;
         }
-        
+
         // Validate release year (optional, but must be valid if provided)
         String releaseYearText = releaseYearField.getText().trim();
         if (!releaseYearText.isEmpty()) {
@@ -155,32 +178,32 @@ public class AlbumDialog extends JDialog {
                 int releaseYear = Integer.parseInt(releaseYearText);
                 int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
                 if (releaseYear < 1800 || releaseYear > currentYear + 5) {
-                    JOptionPane.showMessageDialog(this, 
-                        "Release year must be between 1800 and " + (currentYear + 5) + "!", 
+                    JOptionPane.showMessageDialog(this,
+                        "Release year must be between 1800 and " + (currentYear + 5) + "!",
                         "Validation Error", JOptionPane.ERROR_MESSAGE);
                     releaseYearField.requestFocusInWindow();
                     return false;
                 }
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Release year must be a valid number!", 
+                JOptionPane.showMessageDialog(this, "Release year must be a valid number!",
                                             "Validation Error", JOptionPane.ERROR_MESSAGE);
                 releaseYearField.requestFocusInWindow();
                 return false;
             }
         }
-        
+
         return true;
     }
-    
+
     private void saveAlbum() {
         String title = titleField.getText().trim();
         String releaseYearText = releaseYearField.getText().trim();
-        
+
         Integer releaseYear = null;
         if (!releaseYearText.isEmpty()) {
             releaseYear = Integer.parseInt(releaseYearText);
         }
-        
+
         if (album == null) {
             // Creating new album
             album = new Album(title, releaseYear);
@@ -190,11 +213,11 @@ public class AlbumDialog extends JDialog {
             album.setReleaseYear(releaseYear);
         }
     }
-    
+
     public Album getAlbum() {
         return album;
     }
-    
+
     public boolean isConfirmed() {
         return confirmed;
     }

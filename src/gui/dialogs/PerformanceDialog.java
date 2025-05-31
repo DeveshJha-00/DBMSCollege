@@ -33,23 +33,84 @@ public class PerformanceDialog extends JDialog {
     }
 
     private void initializeComponents() {
-        // Artist combo box
+        // Artist combo box - show only names
         artistCombo = new JComboBox<>();
         artistCombo.setFont(UIConstants.BODY_FONT);
+        artistCombo.setRenderer(new ArtistComboRenderer());
         loadArtists();
 
-        // Song combo box
+        // Song combo box - show only titles
         songCombo = new JComboBox<>();
         songCombo.setFont(UIConstants.BODY_FONT);
+        songCombo.setRenderer(new SongComboRenderer());
         loadSongs();
 
         // Venue field
         venueField = UIConstants.createStyledTextField(20);
         venueField.setToolTipText("Enter the venue where the performance took place");
 
-        // Buttons
+        // Buttons with black text and hover protection
         okButton = UIConstants.createPrimaryButton("Add Performance");
+        okButton.setForeground(Color.BLACK);
+
         cancelButton = UIConstants.createSecondaryButton("Cancel");
+        cancelButton.setForeground(Color.BLACK);
+
+        // Add hover protection for buttons
+        addHoverProtection();
+    }
+
+    private void addHoverProtection() {
+        JButton[] buttons = {okButton, cancelButton};
+
+        for (JButton button : buttons) {
+            button.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+            });
+        }
+    }
+
+    /**
+     * Custom renderer for Artist combo box - shows only name
+     */
+    private static class ArtistComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Artist) {
+                Artist artist = (Artist) value;
+                setText(artist.getName()); // Show only the name
+            }
+
+            return this;
+        }
+    }
+
+    /**
+     * Custom renderer for Song combo box - shows only title
+     */
+    private static class SongComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Song) {
+                Song song = (Song) value;
+                setText(song.getTitle()); // Show only the title
+            }
+
+            return this;
+        }
     }
 
     private void loadArtists() {
@@ -143,20 +204,20 @@ public class PerformanceDialog extends JDialog {
 
     private boolean validateInput() {
         if (artistCombo.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Please select an artist.", 
+            JOptionPane.showMessageDialog(this, "Please select an artist.",
                                         "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
         if (songCombo.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Please select a song.", 
+            JOptionPane.showMessageDialog(this, "Please select a song.",
                                         "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
         String venue = venueField.getText().trim();
         if (venue.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter a venue.", 
+            JOptionPane.showMessageDialog(this, "Please enter a venue.",
                                         "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }

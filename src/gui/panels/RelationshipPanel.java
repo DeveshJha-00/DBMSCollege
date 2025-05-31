@@ -131,6 +131,9 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         UIConstants.applyModernTableStyling(performanceTable);
         performanceTable.setRowSorter(new TableRowSorter<>(performanceTableModel));
 
+        // Set custom column widths for better display
+        setPerformanceTableColumnWidths();
+
         performanceSearchField = new JTextField(20);
         performanceSearchField.setToolTipText("Search performances...");
         performanceSearchField.setPreferredSize(new Dimension(200, 28));
@@ -165,6 +168,9 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         // Configure table appearance with modern styling
         UIConstants.applyModernTableStyling(albumSongTable);
         albumSongTable.setRowSorter(new TableRowSorter<>(albumSongTableModel));
+
+        // Set custom column widths for better display
+        setAlbumSongTableColumnWidths();
 
         albumSongSearchField = new JTextField(20);
         albumSongSearchField.setToolTipText("Search album songs...");
@@ -201,6 +207,9 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         UIConstants.applyModernTableStyling(artistAwardTable);
         artistAwardTable.setRowSorter(new TableRowSorter<>(artistAwardTableModel));
 
+        // Set custom column widths for better display
+        setArtistAwardTableColumnWidths();
+
         artistAwardSearchField = new JTextField(20);
         artistAwardSearchField.setToolTipText("Search artist awards...");
         artistAwardSearchField.setPreferredSize(new Dimension(200, 28));
@@ -235,6 +244,9 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         // Configure table appearance with modern styling
         UIConstants.applyModernTableStyling(songGenreTable);
         songGenreTable.setRowSorter(new TableRowSorter<>(songGenreTableModel));
+
+        // Set custom column widths for better display
+        setSongGenreTableColumnWidths();
 
         songGenreSearchField = new JTextField(20);
         songGenreSearchField.setToolTipText("Search song genres...");
@@ -563,8 +575,17 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         // Set MUCH LARGER size for maximum visibility
-        button.setPreferredSize(new Dimension(180, 50)); // MUCH LARGER buttons
-        button.setMinimumSize(new Dimension(180, 50));
+        // Adjust width based on button text length for better visibility
+        int buttonWidth;
+        if (text.contains("Add Performance")) {
+            buttonWidth = 220; // Larger width for "Add Performance" button
+        } else if (text.contains("Add Song to Album")) {
+            buttonWidth = 240; // Even larger width for "Add Song to Album" button
+        } else {
+            buttonWidth = 180; // Standard width for other buttons
+        }
+        button.setPreferredSize(new Dimension(buttonWidth, 50));
+        button.setMinimumSize(new Dimension(buttonWidth, 50));
 
         // Enhanced hover effect with better contrast
         button.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -594,6 +615,50 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
         });
 
         return button;
+    }
+
+    private void setAlbumSongTableColumnWidths() {
+        // Set custom column widths for album-song table
+        // Columns: "Album", "Release Year", "Number of Songs", "Total Duration"
+        albumSongTable.getColumnModel().getColumn(0).setPreferredWidth(400); // Album - much wider for better spacing
+        albumSongTable.getColumnModel().getColumn(0).setResizable(true);     // Make Album column resizable
+        albumSongTable.getColumnModel().getColumn(0).setMaxWidth(Integer.MAX_VALUE); // Allow unlimited expansion
+        albumSongTable.getColumnModel().getColumn(1).setPreferredWidth(120); // Release Year
+        albumSongTable.getColumnModel().getColumn(2).setPreferredWidth(140); // Number of Songs
+        albumSongTable.getColumnModel().getColumn(3).setPreferredWidth(140); // Total Duration
+    }
+
+    private void setPerformanceTableColumnWidths() {
+        // Set custom column widths for performance table
+        // Columns: "Artist", "Song", "Venue", "Duration"
+        performanceTable.getColumnModel().getColumn(0).setPreferredWidth(400); // Artist - much wider for better spacing
+        performanceTable.getColumnModel().getColumn(0).setResizable(true);     // Make Artist column resizable
+        performanceTable.getColumnModel().getColumn(0).setMaxWidth(Integer.MAX_VALUE); // Allow unlimited expansion
+        performanceTable.getColumnModel().getColumn(1).setPreferredWidth(200); // Song
+        performanceTable.getColumnModel().getColumn(2).setPreferredWidth(180); // Venue
+        performanceTable.getColumnModel().getColumn(3).setPreferredWidth(120); // Duration
+    }
+
+    private void setArtistAwardTableColumnWidths() {
+        // Set custom column widths for artist-award table
+        // Columns: "Artist", "Award", "Year", "Role"
+        artistAwardTable.getColumnModel().getColumn(0).setPreferredWidth(400); // Artist - much wider for better spacing
+        artistAwardTable.getColumnModel().getColumn(0).setResizable(true);     // Make Artist column resizable
+        artistAwardTable.getColumnModel().getColumn(0).setMaxWidth(Integer.MAX_VALUE); // Allow unlimited expansion
+        artistAwardTable.getColumnModel().getColumn(1).setPreferredWidth(220); // Award
+        artistAwardTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Year
+        artistAwardTable.getColumnModel().getColumn(3).setPreferredWidth(160); // Role
+    }
+
+    private void setSongGenreTableColumnWidths() {
+        // Set custom column widths for song-genre table
+        // Columns: "Song", "Genre", "Assigned By", "Release Year"
+        songGenreTable.getColumnModel().getColumn(0).setPreferredWidth(400); // Song - much wider for better spacing
+        songGenreTable.getColumnModel().getColumn(0).setResizable(true);     // Make Song column resizable
+        songGenreTable.getColumnModel().getColumn(0).setMaxWidth(Integer.MAX_VALUE); // Allow unlimited expansion
+        songGenreTable.getColumnModel().getColumn(1).setPreferredWidth(150); // Genre
+        songGenreTable.getColumnModel().getColumn(2).setPreferredWidth(150); // Assigned By
+        songGenreTable.getColumnModel().getColumn(3).setPreferredWidth(120); // Release Year
     }
 
     private JPanel createBeautifulControlPanel(String searchLabel, JTextField searchField, JButton... buttons) {

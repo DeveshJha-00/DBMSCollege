@@ -358,14 +358,6 @@ public class MainWindow extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
         setMinimumSize(new Dimension(800, 600));
-
-        // Set application icon (if available)
-        try {
-            // You can add an icon here if you have one
-            // setIconImage(ImageIO.read(getClass().getResource("/icons/app-icon.png")));
-        } catch (Exception e) {
-            // Icon not found, continue without it
-        }
     }
 
     private void refreshAllPanels() {

@@ -10,15 +10,15 @@ import java.util.List;
  * Handles all award management functionality including CRUD operations
  */
 public class AwardController {
-    
+
     private MusicService musicService;
     private InputHelper inputHelper;
-    
+
     public AwardController(MusicService musicService, InputHelper inputHelper) {
         this.musicService = musicService;
         this.inputHelper = inputHelper;
     }
-    
+
     /**
      * Displays the award management menu and handles user choices
      */
@@ -56,7 +56,7 @@ public class AwardController {
                 System.out.println("Invalid choice.");
         }
     }
-    
+
     /**
      * Adds a new award to the database
      */
@@ -73,7 +73,7 @@ public class AwardController {
             System.out.println("Failed to add award.");
         }
     }
-    
+
     /**
      * Displays all awards in the database
      */
@@ -86,10 +86,33 @@ public class AwardController {
         } else {
             for (Award award : awards) {
                 System.out.println(award);
+
+                // Show who won this award
+                List<String[]> artistRoles = musicService.getArtistDAO().getArtistRolesByAwardId(award.getAwardId());
+                if (!artistRoles.isEmpty()) {
+                    System.out.println("  Recipients:");
+                    for (String[] artistRole : artistRoles) {
+                        String name = artistRole[0];
+                        String country = artistRole[1];
+                        String role = artistRole[2];
+
+                        String displayText = "    - " + name;
+                        if (country != null && !country.trim().isEmpty()) {
+                            displayText += " (" + country + ")";
+                        }
+                        if (role != null && !role.trim().isEmpty()) {
+                            displayText += " - Role: " + role;
+                        }
+                        System.out.println(displayText);
+                    }
+                } else {
+                    System.out.println("  No recipients found for this award.");
+                }
+                System.out.println(); // Add blank line between awards
             }
         }
     }
-    
+
     /**
      * Searches for awards by name
      */
@@ -106,7 +129,7 @@ public class AwardController {
             }
         }
     }
-    
+
     /**
      * Views awards by a specific year
      */
@@ -123,7 +146,7 @@ public class AwardController {
             }
         }
     }
-    
+
     /**
      * Updates an existing award's information
      */
@@ -158,7 +181,7 @@ public class AwardController {
             System.out.println("Failed to update award.");
         }
     }
-    
+
     /**
      * Deletes an award from the database
      */

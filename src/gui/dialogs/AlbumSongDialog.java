@@ -33,23 +33,84 @@ public class AlbumSongDialog extends JDialog {
     }
 
     private void initializeComponents() {
-        // Album combo box
+        // Album combo box - show only titles
         albumCombo = new JComboBox<>();
         albumCombo.setFont(UIConstants.BODY_FONT);
+        albumCombo.setRenderer(new AlbumComboRenderer());
         loadAlbums();
 
-        // Song combo box
+        // Song combo box - show only titles
         songCombo = new JComboBox<>();
         songCombo.setFont(UIConstants.BODY_FONT);
+        songCombo.setRenderer(new SongComboRenderer());
         loadSongs();
 
         // Total songs field
         totalSongsField = UIConstants.createStyledTextField(10);
         totalSongsField.setToolTipText("Enter the total number of songs in this album");
 
-        // Buttons
+        // Buttons with black text and hover protection
         okButton = UIConstants.createPrimaryButton("Add to Album");
+        okButton.setForeground(Color.BLACK);
+
         cancelButton = UIConstants.createSecondaryButton("Cancel");
+        cancelButton.setForeground(Color.BLACK);
+
+        // Add hover protection for buttons
+        addHoverProtection();
+    }
+
+    private void addHoverProtection() {
+        JButton[] buttons = {okButton, cancelButton};
+
+        for (JButton button : buttons) {
+            button.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+            });
+        }
+    }
+
+    /**
+     * Custom renderer for Album combo box - shows only title
+     */
+    private static class AlbumComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Album) {
+                Album album = (Album) value;
+                setText(album.getTitle()); // Show only the title
+            }
+
+            return this;
+        }
+    }
+
+    /**
+     * Custom renderer for Song combo box - shows only title
+     */
+    private static class SongComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Song) {
+                Song song = (Song) value;
+                setText(song.getTitle()); // Show only the title
+            }
+
+            return this;
+        }
     }
 
     private void loadAlbums() {

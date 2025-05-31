@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class AlbumSongTableModel extends AbstractTableModel {
 
-    private final String[] columnNames = {"Album", "Song", "Total Songs", "Duration", "Release Year"};
+    private final String[] columnNames = {"Album", "Release Year", "Number of Songs", "Total Duration"};
     private List<AlbumSongData> albumSongs;
     private final MusicService musicService;
 
@@ -25,19 +25,27 @@ public class AlbumSongTableModel extends AbstractTableModel {
 
     public void loadData() {
         albumSongs.clear();
-        
-        // Get all album-song relationships from the database
+
+        // Get all albums and show album-centric data
         List<Album> albums = musicService.getAlbumDAO().getAllAlbums();
-        
+
         for (Album album : albums) {
             List<Song> songs = musicService.getSongsByAlbum(album.getAlbumId());
             int totalSongs = musicService.getTotalSongsInAlbum(album.getAlbumId());
-            
+            int songsInDB = songs.size();
+
+            // Calculate total duration of all songs in the album
+            int totalDuration = 0;
             for (Song song : songs) {
-                albumSongs.add(new AlbumSongData(album, song, totalSongs));
+                if (song.getDuration() != null) {
+                    totalDuration += song.getDuration();
+                }
             }
+
+            // Add one entry per album (not per song)
+            albumSongs.add(new AlbumSongData(album, totalSongs, songsInDB, totalDuration));
         }
-        
+
         fireTableDataChanged();
     }
 
@@ -58,19 +66,17 @@ public class AlbumSongTableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        AlbumSongData albumSong = albumSongs.get(rowIndex);
-        
+        AlbumSongData albumData = albumSongs.get(rowIndex);
+
         switch (columnIndex) {
-            case 0:
-                return albumSong.getAlbum().getTitle();
-            case 1:
-                return albumSong.getSong().getTitle();
-            case 2:
-                return albumSong.getTotalSongs();
-            case 3:
-                return albumSong.getSong().getFormattedDuration();
-            case 4:
-                return albumSong.getSong().getReleaseYear();
+            case 0: // Album
+                return albumData.getAlbum().getTitle();
+            case 1: // Release Year
+                return albumData.getAlbum().getReleaseYear();
+            case 2: // Number of Songs (songs in DB)
+                return albumData.getSongsInDB();
+            case 3: // Total Duration
+                return albumData.getFormattedTotalDuration();
             default:
                 return null;
         }
@@ -78,10 +84,13 @@ public class AlbumSongTableModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        if (columnIndex == 2 || columnIndex == 4) {
-            return Integer.class;
+        switch (columnIndex) {
+            case 1: // Release Year
+            case 2: // Number of Songs
+                return Integer.class;
+            default: // Album name and Total Duration
+                return String.class;
         }
-        return String.class;
     }
 
     @Override
@@ -103,40 +112,56 @@ public class AlbumSongTableModel extends AbstractTableModel {
     }
 
     public void removeAlbumSong(int rowIndex) {
-        AlbumSongData albumSong = getAlbumSongAt(rowIndex);
-        if (albumSong != null) {
-            if (musicService.removeSongFromAlbum(
-                    albumSong.getAlbum().getAlbumId(), 
-                    albumSong.getSong().getSongId())) {
-                loadData(); // Reload data to reflect changes
-            }
+        // Since we now show albums (not individual songs), we need to handle this differently
+        // This method could be used to remove all songs from an album or show a dialog to select which song to remove
+        AlbumSongData albumData = getAlbumSongAt(rowIndex);
+        if (albumData != null) {
+            // For now, we'll show a message that this needs to be handled differently
+            // In a real implementation, you might want to show a dialog to select which song to remove
+            System.out.println("Remove functionality needs to be redesigned for album-centric view");
+            // loadData(); // Reload data to reflect changes
         }
     }
 
     /**
-     * Inner class to hold album-song data
+     * Inner class to hold album data with song statistics
      */
     public static class AlbumSongData {
         private final Album album;
-        private final Song song;
         private final int totalSongs;
+        private final int songsInDB;
+        private final int totalDuration;
 
-        public AlbumSongData(Album album, Song song, int totalSongs) {
+        public AlbumSongData(Album album, int totalSongs, int songsInDB, int totalDuration) {
             this.album = album;
-            this.song = song;
             this.totalSongs = totalSongs;
+            this.songsInDB = songsInDB;
+            this.totalDuration = totalDuration;
         }
 
         public Album getAlbum() {
             return album;
         }
 
-        public Song getSong() {
-            return song;
-        }
-
         public int getTotalSongs() {
             return totalSongs;
+        }
+
+        public int getSongsInDB() {
+            return songsInDB;
+        }
+
+        public int getTotalDuration() {
+            return totalDuration;
+        }
+
+        public String getFormattedTotalDuration() {
+            if (totalDuration == 0) {
+                return "0:00";
+            }
+            int minutes = totalDuration / 60;
+            int seconds = totalDuration % 60;
+            return String.format("%d:%02d", minutes, seconds);
         }
     }
 }

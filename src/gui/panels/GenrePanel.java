@@ -1,7 +1,7 @@
 package gui.panels;
 
 import gui.MainWindow.RefreshablePanel;
-import gui.dialogs.GenreDialog;
+import gui.dialogs.EnhancedGenreDialog;
 import gui.models.GenreTableModel;
 import gui.utils.BeautifulPanel;
 import gui.utils.LayoutHelper;
@@ -297,21 +297,13 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
     }
 
     private void addGenre() {
-        GenreDialog dialog = new GenreDialog(getParentFrame(), "Add Genre", null);
+        EnhancedGenreDialog dialog = new EnhancedGenreDialog(getParentFrame(), "Add Genre", null, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            Genre genre = dialog.getGenre();
-            if (musicService.getGenreDAO().createGenre(genre)) {
-                refreshData();
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_SUCCESS + " Genre added successfully!",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_ERROR + " Failed to add genre!",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Genre is already saved in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
 
@@ -322,21 +314,13 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
         int modelRow = genreTable.convertRowIndexToModel(selectedRow);
         Genre genre = tableModel.getGenreAt(modelRow);
 
-        GenreDialog dialog = new GenreDialog(getParentFrame(), "Edit Genre", genre);
+        EnhancedGenreDialog dialog = new EnhancedGenreDialog(getParentFrame(), "Edit Genre", genre, musicService);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
-            Genre updatedGenre = dialog.getGenre();
-            if (musicService.getGenreDAO().updateGenre(updatedGenre)) {
-                refreshData();
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_SUCCESS + " Genre updated successfully!",
-                    "Success", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                    UIConstants.ICON_ERROR + " Failed to update genre!",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            // Genre is already updated in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
 

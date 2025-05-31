@@ -33,23 +33,84 @@ public class SongGenreDialog extends JDialog {
     }
 
     private void initializeComponents() {
-        // Song combo box
+        // Song combo box - show only titles
         songCombo = new JComboBox<>();
         songCombo.setFont(UIConstants.BODY_FONT);
+        songCombo.setRenderer(new SongComboRenderer());
         loadSongs();
 
-        // Genre combo box
+        // Genre combo box - show only names
         genreCombo = new JComboBox<>();
         genreCombo.setFont(UIConstants.BODY_FONT);
+        genreCombo.setRenderer(new GenreComboRenderer());
         loadGenres();
 
         // Assigned by field
         assignedByField = UIConstants.createStyledTextField(20);
         assignedByField.setToolTipText("Enter who assigned this genre to the song");
 
-        // Buttons
+        // Buttons with black text and hover protection
         okButton = UIConstants.createPrimaryButton("Add Genre");
+        okButton.setForeground(Color.BLACK);
+
         cancelButton = UIConstants.createSecondaryButton("Cancel");
+        cancelButton.setForeground(Color.BLACK);
+
+        // Add hover protection for buttons
+        addHoverProtection();
+    }
+
+    private void addHoverProtection() {
+        JButton[] buttons = {okButton, cancelButton};
+
+        for (JButton button : buttons) {
+            button.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+            });
+        }
+    }
+
+    /**
+     * Custom renderer for Song combo box - shows only title
+     */
+    private static class SongComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Song) {
+                Song song = (Song) value;
+                setText(song.getTitle()); // Show only the title
+            }
+
+            return this;
+        }
+    }
+
+    /**
+     * Custom renderer for Genre combo box - shows only name
+     */
+    private static class GenreComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Genre) {
+                Genre genre = (Genre) value;
+                setText(genre.getName()); // Show only the name
+            }
+
+            return this;
+        }
     }
 
     private void loadSongs() {
@@ -143,20 +204,20 @@ public class SongGenreDialog extends JDialog {
 
     private boolean validateInput() {
         if (songCombo.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Please select a song.", 
+            JOptionPane.showMessageDialog(this, "Please select a song.",
                                         "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
         if (genreCombo.getSelectedItem() == null) {
-            JOptionPane.showMessageDialog(this, "Please select a genre.", 
+            JOptionPane.showMessageDialog(this, "Please select a genre.",
                                         "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
         String assignedBy = assignedByField.getText().trim();
         if (assignedBy.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please enter who assigned this genre.", 
+            JOptionPane.showMessageDialog(this, "Please enter who assigned this genre.",
                                         "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
