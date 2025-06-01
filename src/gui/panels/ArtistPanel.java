@@ -224,22 +224,6 @@ public class ArtistPanel extends JPanel implements RefreshablePanel {
         });
     }
 
-    private JPanel createInfoPanel() {
-        JPanel infoPanel = new JPanel(new BorderLayout());
-        infoPanel.setBorder(BorderFactory.createTitledBorder("Information"));
-
-        JLabel infoLabel = new JLabel("<html>" +
-            "<b>Artist Management</b><br>" +
-            "• Double-click on a row to edit an artist<br>" +
-            "• Use the search field to filter artists<br>" +
-            "• Click column headers to sort data" +
-            "</html>");
-
-        infoPanel.add(infoLabel, BorderLayout.CENTER);
-
-        return infoPanel;
-    }
-
     private void setupEventHandlers() {
         // Search functionality
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {

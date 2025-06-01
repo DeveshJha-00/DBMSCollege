@@ -475,16 +475,11 @@ public class RelationshipPanel extends JPanel implements RefreshablePanel {
     private void removeAlbumSong() {
         int selectedRow = albumSongTable.getSelectedRow();
         if (selectedRow != -1) {
-            int modelRow = albumSongTable.convertRowIndexToModel(selectedRow);
-            int option = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to remove this song from the album?",
-                "Confirm Removal", JOptionPane.YES_NO_OPTION);
-
-            if (option == JOptionPane.YES_OPTION) {
-                albumSongTableModel.removeAlbumSong(modelRow);
-                JOptionPane.showMessageDialog(this, "Song removed from album successfully!",
-                                            "Success", JOptionPane.INFORMATION_MESSAGE);
-            }
+            JOptionPane.showMessageDialog(this,
+                "❌ Remove functionality is not available for album-centric view.\n\n" +
+                "To remove songs from albums, please use the Album Management panel\n" +
+                "and edit the specific album.",
+                "Feature Not Available", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

@@ -1,43 +1,23 @@
 package gui.models;
 
-import model.Genre;
-
-import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.List;
+import model.Genre;
 
 /**
  * Table model for displaying genres in a JTable
  */
-public class GenreTableModel extends AbstractTableModel {
-    
+public class GenreTableModel extends BaseTableModel<Genre> {
+
     private static final String[] COLUMN_NAMES = {
         "ID", "Name", "Description"
     };
-    
-    private List<Genre> genres;
-    
+
     public GenreTableModel() {
-        this.genres = new ArrayList<>();
+        super(COLUMN_NAMES);
     }
-    
+
     public GenreTableModel(List<Genre> genres) {
-        this.genres = genres != null ? new ArrayList<>(genres) : new ArrayList<>();
-    }
-    
-    @Override
-    public int getRowCount() {
-        return genres.size();
-    }
-    
-    @Override
-    public int getColumnCount() {
-        return COLUMN_NAMES.length;
-    }
-    
-    @Override
-    public String getColumnName(int column) {
-        return COLUMN_NAMES[column];
+        super(COLUMN_NAMES, genres);
     }
     
     @Override
@@ -53,20 +33,14 @@ public class GenreTableModel extends AbstractTableModel {
                 return Object.class;
         }
     }
-    
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false; // Make table read-only
-    }
-    
+
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        if (rowIndex < 0 || rowIndex >= genres.size()) {
+        Genre genre = getItemAt(rowIndex);
+        if (genre == null) {
             return null;
         }
-        
-        Genre genre = genres.get(rowIndex);
-        
+
         switch (columnIndex) {
             case 0: // ID
                 return genre.getGenreId();
@@ -79,70 +53,28 @@ public class GenreTableModel extends AbstractTableModel {
         }
     }
     
-    /**
-     * Get the genre at the specified row
-     */
+    // Convenience methods for backward compatibility
     public Genre getGenreAt(int rowIndex) {
-        if (rowIndex < 0 || rowIndex >= genres.size()) {
-            return null;
-        }
-        return genres.get(rowIndex);
+        return getItemAt(rowIndex);
     }
-    
-    /**
-     * Set the list of genres and refresh the table
-     */
+
     public void setGenres(List<Genre> genres) {
-        this.genres = genres != null ? new ArrayList<>(genres) : new ArrayList<>();
-        fireTableDataChanged();
+        setItems(genres);
     }
-    
-    /**
-     * Add a genre to the table
-     */
+
     public void addGenre(Genre genre) {
-        if (genre != null) {
-            genres.add(genre);
-            int row = genres.size() - 1;
-            fireTableRowsInserted(row, row);
-        }
+        addItem(genre);
     }
-    
-    /**
-     * Remove a genre from the table
-     */
+
     public void removeGenre(int rowIndex) {
-        if (rowIndex >= 0 && rowIndex < genres.size()) {
-            genres.remove(rowIndex);
-            fireTableRowsDeleted(rowIndex, rowIndex);
-        }
+        removeItem(rowIndex);
     }
-    
-    /**
-     * Update a genre in the table
-     */
+
     public void updateGenre(int rowIndex, Genre genre) {
-        if (rowIndex >= 0 && rowIndex < genres.size() && genre != null) {
-            genres.set(rowIndex, genre);
-            fireTableRowsUpdated(rowIndex, rowIndex);
-        }
+        updateItem(rowIndex, genre);
     }
-    
-    /**
-     * Clear all genres from the table
-     */
-    public void clear() {
-        int size = genres.size();
-        if (size > 0) {
-            genres.clear();
-            fireTableRowsDeleted(0, size - 1);
-        }
-    }
-    
-    /**
-     * Get all genres in the table
-     */
+
     public List<Genre> getGenres() {
-        return new ArrayList<>(genres);
+        return getItems();
     }
 }

@@ -239,24 +239,6 @@ public class AwardPanel extends JPanel implements RefreshablePanel {
         });
     }
 
-    private JPanel createInfoPanel() {
-        JPanel infoPanel = new JPanel(new BorderLayout());
-        infoPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        infoPanel.setBorder(UIConstants.TITLED_BORDER);
-
-        JLabel infoLabel = UIConstants.createStyledLabel("<html>" +
-            "<b>Award Management</b><br>" +
-            "• Double-click on a row to edit an award<br>" +
-            "• Use 'View Recipients' to see artists who received the award<br>" +
-            "• Use the search field to filter awards<br>" +
-            "• Click column headers to sort data" +
-            "</html>", UIConstants.BODY_FONT);
-
-        infoPanel.add(infoLabel, BorderLayout.CENTER);
-
-        return infoPanel;
-    }
-
     private void setupEventHandlers() {
         // Search functionality
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {

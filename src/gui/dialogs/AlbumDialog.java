@@ -1,16 +1,13 @@
 package gui.dialogs;
 
+import gui.utils.UIConstants;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.*;
 import model.Album;
 import model.Song;
 import service.MusicService;
-import gui.utils.UIConstants;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Enhanced dialog for adding or editing album information with relationship management

@@ -1,12 +1,11 @@
 package gui.models;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.table.AbstractTableModel;
 import model.Album;
 import model.Song;
 import service.MusicService;
-
-import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Table model for displaying Album-Song relationships (CONTAINS)
@@ -108,18 +107,6 @@ public class AlbumSongTableModel extends AbstractTableModel {
     public void addAlbumSong(Album album, Song song, int totalSongs) {
         if (musicService.addSongToAlbumWithTotal(album.getAlbumId(), song.getSongId(), totalSongs)) {
             loadData(); // Reload data to reflect changes
-        }
-    }
-
-    public void removeAlbumSong(int rowIndex) {
-        // Since we now show albums (not individual songs), we need to handle this differently
-        // This method could be used to remove all songs from an album or show a dialog to select which song to remove
-        AlbumSongData albumData = getAlbumSongAt(rowIndex);
-        if (albumData != null) {
-            // For now, we'll show a message that this needs to be handled differently
-            // In a real implementation, you might want to show a dialog to select which song to remove
-            System.out.println("Remove functionality needs to be redesigned for album-centric view");
-            // loadData(); // Reload data to reflect changes
         }
     }
 

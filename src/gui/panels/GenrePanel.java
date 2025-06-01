@@ -230,24 +230,6 @@ public class GenrePanel extends JPanel implements RefreshablePanel {
         });
     }
 
-    private JPanel createInfoPanel() {
-        JPanel infoPanel = new JPanel(new BorderLayout());
-        infoPanel.setBackground(UIConstants.PANEL_BACKGROUND);
-        infoPanel.setBorder(UIConstants.TITLED_BORDER);
-
-        JLabel infoLabel = UIConstants.createStyledLabel("<html>" +
-            "<b>Genre Management</b><br>" +
-            "• Double-click on a row to edit a genre<br>" +
-            "• Use 'View Songs' to see songs in the selected genre<br>" +
-            "• Use the search field to filter genres<br>" +
-            "• Click column headers to sort data" +
-            "</html>", UIConstants.BODY_FONT);
-
-        infoPanel.add(infoLabel, BorderLayout.CENTER);
-
-        return infoPanel;
-    }
-
     private void setupEventHandlers() {
         // Search functionality
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {

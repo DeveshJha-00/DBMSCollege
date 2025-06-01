@@ -145,23 +145,6 @@ public class SongPanel extends JPanel implements RefreshablePanel {
         return panel;
     }
 
-    private JPanel createInfoPanel() {
-        JPanel infoPanel = new JPanel(new BorderLayout());
-        infoPanel.setBorder(BorderFactory.createTitledBorder("Information"));
-
-        JLabel infoLabel = new JLabel("<html>" +
-            "<b>Song Management</b><br>" +
-            "• Double-click on a row to edit a song<br>" +
-            "• Duration is displayed in MM:SS format<br>" +
-            "• Use the search field to filter songs<br>" +
-            "• Click column headers to sort data" +
-            "</html>");
-
-        infoPanel.add(infoLabel, BorderLayout.CENTER);
-
-        return infoPanel;
-    }
-
     private void setupEventHandlers() {
         // Search functionality
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {

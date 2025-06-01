@@ -15,8 +15,6 @@ public class UIConstants {
     public static final Color PRIMARY_LIGHT = new Color(186, 104, 200);      // Light Violet
     public static final Color ACCENT_COLOR = new Color(255, 215, 0);         // Gold
     public static final Color SUCCESS_COLOR = new Color(46, 204, 113);       // Emerald Green
-    public static final Color WARNING_COLOR = new Color(241, 196, 15);       // Sun Flower
-    public static final Color ERROR_COLOR = new Color(231, 76, 60);          // Alizarin Red
     public static final Color INFO_COLOR = new Color(52, 152, 219);          // Peter River Blue
 
     // Beautiful Background Colors with Gradients
@@ -29,8 +27,6 @@ public class UIConstants {
     // Gradient Colors for Beautiful Backgrounds
     public static final Color GRADIENT_START = new Color(138, 43, 226);      // Primary
     public static final Color GRADIENT_END = new Color(186, 104, 200);       // Primary Light
-    public static final Color HEADER_GRADIENT_START = new Color(67, 56, 202); // Indigo
-    public static final Color HEADER_GRADIENT_END = new Color(139, 69, 19);   // Saddle Brown
 
     // Text Colors
     public static final Color TEXT_PRIMARY = new Color(33, 33, 33);          // Dark Gray
@@ -56,7 +52,6 @@ public class UIConstants {
     public static final int COMPONENT_SPACING = 5;     // Reduced from 8
     public static final int LARGE_SPACING = 10;        // Reduced from 16
     public static final int COMPACT_SPACING = 3;       // New ultra-compact spacing
-    public static final int MINIMAL_SPACING = 1;       // New minimal spacing
 
     // Compact Borders - Optimized for space efficiency
     public static final Border PANEL_BORDER = BorderFactory.createCompoundBorder(
@@ -98,29 +93,10 @@ public class UIConstants {
         BorderFactory.createEmptyBorder(LARGE_SPACING, LARGE_SPACING, LARGE_SPACING, LARGE_SPACING)
     );
 
-    // Icons (Unicode symbols as fallback)
-    public static final String ICON_ADD = "➕";
-    public static final String ICON_EDIT = "✏️";
-    public static final String ICON_DELETE = "🗑️";
-    public static final String ICON_REFRESH = "🔄";
-    public static final String ICON_SEARCH = "🔍";
-    public static final String ICON_SAVE = "💾";
-    public static final String ICON_CANCEL = "❌";
-    public static final String ICON_VIEW = "👁️";
-    public static final String ICON_ARTIST = "🎤";
-    public static final String ICON_ALBUM = "💿";
-    public static final String ICON_SONG = "🎵";
-    public static final String ICON_GENRE = "🎭";
-    public static final String ICON_AWARD = "🏆";
-    public static final String ICON_RELATIONSHIP = "🔗";
+    // Icons (Unicode symbols as fallback) - Only keeping used ones
     public static final String ICON_SUCCESS = "✅";
     public static final String ICON_ERROR = "❌";
     public static final String ICON_WARNING = "⚠️";
-    public static final String ICON_INFO = "ℹ️";
-
-    // Animation and Effects
-    public static final int ANIMATION_DURATION = 200; // milliseconds
-    public static final float HOVER_ALPHA = 0.1f;
 
     /**
      * Create a styled button with primary color scheme
@@ -606,24 +582,5 @@ public class UIConstants {
         return button;
     }
 
-    /**
-     * Create a compact header panel with gradient and minimal spacing
-     */
-    public static JPanel createCompactHeaderPanel(String title, String subtitle) {
-        JPanel panel = createGradientPanel(HEADER_GRADIENT_START, HEADER_GRADIENT_END);
-        panel.setLayout(new BorderLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(LARGE_SPACING, LARGE_SPACING, LARGE_SPACING, LARGE_SPACING));
 
-        JPanel titleContainer = new JPanel(new BorderLayout());
-        titleContainer.setOpaque(false);
-
-        JLabel titleLabel = createTitleLabel(title);
-        JLabel subtitleLabel = createSubtitleLabel(subtitle);
-
-        titleContainer.add(titleLabel, BorderLayout.NORTH);
-        titleContainer.add(subtitleLabel, BorderLayout.CENTER);
-
-        panel.add(titleContainer, BorderLayout.WEST);
-        return panel;
-    }
 }

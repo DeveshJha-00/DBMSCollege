@@ -1,43 +1,23 @@
 package gui.models;
 
-import model.Album;
-
-import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.List;
+import model.Album;
 
 /**
  * Table model for displaying albums in a JTable
  */
-public class AlbumTableModel extends AbstractTableModel {
-    
+public class AlbumTableModel extends BaseTableModel<Album> {
+
     private static final String[] COLUMN_NAMES = {
         "ID", "Title", "Release Year"
     };
-    
-    private List<Album> albums;
-    
+
     public AlbumTableModel() {
-        this.albums = new ArrayList<>();
+        super(COLUMN_NAMES);
     }
-    
+
     public AlbumTableModel(List<Album> albums) {
-        this.albums = albums != null ? new ArrayList<>(albums) : new ArrayList<>();
-    }
-    
-    @Override
-    public int getRowCount() {
-        return albums.size();
-    }
-    
-    @Override
-    public int getColumnCount() {
-        return COLUMN_NAMES.length;
-    }
-    
-    @Override
-    public String getColumnName(int column) {
-        return COLUMN_NAMES[column];
+        super(COLUMN_NAMES, albums);
     }
     
     @Override
@@ -53,20 +33,14 @@ public class AlbumTableModel extends AbstractTableModel {
                 return Object.class;
         }
     }
-    
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false; // Make table read-only
-    }
-    
+
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        if (rowIndex < 0 || rowIndex >= albums.size()) {
+        Album album = getItemAt(rowIndex);
+        if (album == null) {
             return null;
         }
-        
-        Album album = albums.get(rowIndex);
-        
+
         switch (columnIndex) {
             case 0: // ID
                 return album.getAlbumId();
@@ -78,71 +52,29 @@ public class AlbumTableModel extends AbstractTableModel {
                 return null;
         }
     }
-    
-    /**
-     * Get the album at the specified row
-     */
+
+    // Convenience methods for backward compatibility
     public Album getAlbumAt(int rowIndex) {
-        if (rowIndex < 0 || rowIndex >= albums.size()) {
-            return null;
-        }
-        return albums.get(rowIndex);
+        return getItemAt(rowIndex);
     }
-    
-    /**
-     * Set the list of albums and refresh the table
-     */
+
     public void setAlbums(List<Album> albums) {
-        this.albums = albums != null ? new ArrayList<>(albums) : new ArrayList<>();
-        fireTableDataChanged();
+        setItems(albums);
     }
-    
-    /**
-     * Add an album to the table
-     */
+
     public void addAlbum(Album album) {
-        if (album != null) {
-            albums.add(album);
-            int row = albums.size() - 1;
-            fireTableRowsInserted(row, row);
-        }
+        addItem(album);
     }
-    
-    /**
-     * Remove an album from the table
-     */
+
     public void removeAlbum(int rowIndex) {
-        if (rowIndex >= 0 && rowIndex < albums.size()) {
-            albums.remove(rowIndex);
-            fireTableRowsDeleted(rowIndex, rowIndex);
-        }
+        removeItem(rowIndex);
     }
-    
-    /**
-     * Update an album in the table
-     */
+
     public void updateAlbum(int rowIndex, Album album) {
-        if (rowIndex >= 0 && rowIndex < albums.size() && album != null) {
-            albums.set(rowIndex, album);
-            fireTableRowsUpdated(rowIndex, rowIndex);
-        }
+        updateItem(rowIndex, album);
     }
-    
-    /**
-     * Clear all albums from the table
-     */
-    public void clear() {
-        int size = albums.size();
-        if (size > 0) {
-            albums.clear();
-            fireTableRowsDeleted(0, size - 1);
-        }
-    }
-    
-    /**
-     * Get all albums in the table
-     */
+
     public List<Album> getAlbums() {
-        return new ArrayList<>(albums);
+        return getItems();
     }
 }

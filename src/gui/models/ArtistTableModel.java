@@ -1,43 +1,23 @@
 package gui.models;
 
-import model.Artist;
-
-import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.List;
+import model.Artist;
 
 /**
  * Table model for displaying artists in a JTable
  */
-public class ArtistTableModel extends AbstractTableModel {
-    
+public class ArtistTableModel extends BaseTableModel<Artist> {
+
     private static final String[] COLUMN_NAMES = {
         "ID", "Name", "Country", "Birth Year"
     };
-    
-    private List<Artist> artists;
-    
+
     public ArtistTableModel() {
-        this.artists = new ArrayList<>();
+        super(COLUMN_NAMES);
     }
-    
+
     public ArtistTableModel(List<Artist> artists) {
-        this.artists = artists != null ? new ArrayList<>(artists) : new ArrayList<>();
-    }
-    
-    @Override
-    public int getRowCount() {
-        return artists.size();
-    }
-    
-    @Override
-    public int getColumnCount() {
-        return COLUMN_NAMES.length;
-    }
-    
-    @Override
-    public String getColumnName(int column) {
-        return COLUMN_NAMES[column];
+        super(COLUMN_NAMES, artists);
     }
     
     @Override
@@ -55,20 +35,14 @@ public class ArtistTableModel extends AbstractTableModel {
                 return Object.class;
         }
     }
-    
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false; // Make table read-only
-    }
-    
+
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        if (rowIndex < 0 || rowIndex >= artists.size()) {
+        Artist artist = getItemAt(rowIndex);
+        if (artist == null) {
             return null;
         }
-        
-        Artist artist = artists.get(rowIndex);
-        
+
         switch (columnIndex) {
             case 0: // ID
                 return artist.getArtistId();
@@ -82,71 +56,29 @@ public class ArtistTableModel extends AbstractTableModel {
                 return null;
         }
     }
-    
-    /**
-     * Get the artist at the specified row
-     */
+
+    // Convenience methods for backward compatibility
     public Artist getArtistAt(int rowIndex) {
-        if (rowIndex < 0 || rowIndex >= artists.size()) {
-            return null;
-        }
-        return artists.get(rowIndex);
+        return getItemAt(rowIndex);
     }
-    
-    /**
-     * Set the list of artists and refresh the table
-     */
+
     public void setArtists(List<Artist> artists) {
-        this.artists = artists != null ? new ArrayList<>(artists) : new ArrayList<>();
-        fireTableDataChanged();
+        setItems(artists);
     }
-    
-    /**
-     * Add an artist to the table
-     */
+
     public void addArtist(Artist artist) {
-        if (artist != null) {
-            artists.add(artist);
-            int row = artists.size() - 1;
-            fireTableRowsInserted(row, row);
-        }
+        addItem(artist);
     }
-    
-    /**
-     * Remove an artist from the table
-     */
+
     public void removeArtist(int rowIndex) {
-        if (rowIndex >= 0 && rowIndex < artists.size()) {
-            artists.remove(rowIndex);
-            fireTableRowsDeleted(rowIndex, rowIndex);
-        }
+        removeItem(rowIndex);
     }
-    
-    /**
-     * Update an artist in the table
-     */
+
     public void updateArtist(int rowIndex, Artist artist) {
-        if (rowIndex >= 0 && rowIndex < artists.size() && artist != null) {
-            artists.set(rowIndex, artist);
-            fireTableRowsUpdated(rowIndex, rowIndex);
-        }
+        updateItem(rowIndex, artist);
     }
-    
-    /**
-     * Clear all artists from the table
-     */
-    public void clear() {
-        int size = artists.size();
-        if (size > 0) {
-            artists.clear();
-            fireTableRowsDeleted(0, size - 1);
-        }
-    }
-    
-    /**
-     * Get all artists in the table
-     */
+
     public List<Artist> getArtists() {
-        return new ArrayList<>(artists);
+        return getItems();
     }
 }

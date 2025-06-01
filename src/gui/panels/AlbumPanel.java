@@ -227,23 +227,6 @@ public class AlbumPanel extends JPanel implements RefreshablePanel {
         });
     }
 
-    private JPanel createInfoPanel() {
-        JPanel infoPanel = new JPanel(new BorderLayout());
-        infoPanel.setBorder(BorderFactory.createTitledBorder("Information"));
-
-        JLabel infoLabel = new JLabel("<html>" +
-            "<b>Album Management</b><br>" +
-            "• Double-click on a row to edit an album<br>" +
-            "• Use 'View Songs' to see songs in the selected album<br>" +
-            "• Use the search field to filter albums<br>" +
-            "• Click column headers to sort data" +
-            "</html>");
-
-        infoPanel.add(infoLabel, BorderLayout.CENTER);
-
-        return infoPanel;
-    }
-
     private void setupEventHandlers() {
         // Search functionality
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {

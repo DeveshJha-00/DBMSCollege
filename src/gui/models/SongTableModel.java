@@ -1,43 +1,23 @@
 package gui.models;
 
-import model.Song;
-
-import javax.swing.table.AbstractTableModel;
-import java.util.ArrayList;
 import java.util.List;
+import model.Song;
 
 /**
  * Table model for displaying songs in a JTable
  */
-public class SongTableModel extends AbstractTableModel {
-    
+public class SongTableModel extends BaseTableModel<Song> {
+
     private static final String[] COLUMN_NAMES = {
         "ID", "Title", "Duration", "Release Year"
     };
-    
-    private List<Song> songs;
-    
+
     public SongTableModel() {
-        this.songs = new ArrayList<>();
+        super(COLUMN_NAMES);
     }
-    
+
     public SongTableModel(List<Song> songs) {
-        this.songs = songs != null ? new ArrayList<>(songs) : new ArrayList<>();
-    }
-    
-    @Override
-    public int getRowCount() {
-        return songs.size();
-    }
-    
-    @Override
-    public int getColumnCount() {
-        return COLUMN_NAMES.length;
-    }
-    
-    @Override
-    public String getColumnName(int column) {
-        return COLUMN_NAMES[column];
+        super(COLUMN_NAMES, songs);
     }
     
     @Override
@@ -55,20 +35,14 @@ public class SongTableModel extends AbstractTableModel {
                 return Object.class;
         }
     }
-    
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false; // Make table read-only
-    }
-    
+
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        if (rowIndex < 0 || rowIndex >= songs.size()) {
+        Song song = getItemAt(rowIndex);
+        if (song == null) {
             return null;
         }
-        
-        Song song = songs.get(rowIndex);
-        
+
         switch (columnIndex) {
             case 0: // ID
                 return song.getSongId();
@@ -83,70 +57,28 @@ public class SongTableModel extends AbstractTableModel {
         }
     }
     
-    /**
-     * Get the song at the specified row
-     */
+    // Convenience methods for backward compatibility
     public Song getSongAt(int rowIndex) {
-        if (rowIndex < 0 || rowIndex >= songs.size()) {
-            return null;
-        }
-        return songs.get(rowIndex);
+        return getItemAt(rowIndex);
     }
-    
-    /**
-     * Set the list of songs and refresh the table
-     */
+
     public void setSongs(List<Song> songs) {
-        this.songs = songs != null ? new ArrayList<>(songs) : new ArrayList<>();
-        fireTableDataChanged();
+        setItems(songs);
     }
-    
-    /**
-     * Add a song to the table
-     */
+
     public void addSong(Song song) {
-        if (song != null) {
-            songs.add(song);
-            int row = songs.size() - 1;
-            fireTableRowsInserted(row, row);
-        }
+        addItem(song);
     }
-    
-    /**
-     * Remove a song from the table
-     */
+
     public void removeSong(int rowIndex) {
-        if (rowIndex >= 0 && rowIndex < songs.size()) {
-            songs.remove(rowIndex);
-            fireTableRowsDeleted(rowIndex, rowIndex);
-        }
+        removeItem(rowIndex);
     }
-    
-    /**
-     * Update a song in the table
-     */
+
     public void updateSong(int rowIndex, Song song) {
-        if (rowIndex >= 0 && rowIndex < songs.size() && song != null) {
-            songs.set(rowIndex, song);
-            fireTableRowsUpdated(rowIndex, rowIndex);
-        }
+        updateItem(rowIndex, song);
     }
-    
-    /**
-     * Clear all songs from the table
-     */
-    public void clear() {
-        int size = songs.size();
-        if (size > 0) {
-            songs.clear();
-            fireTableRowsDeleted(0, size - 1);
-        }
-    }
-    
-    /**
-     * Get all songs in the table
-     */
+
     public List<Song> getSongs() {
-        return new ArrayList<>(songs);
+        return getItems();
     }
 }
