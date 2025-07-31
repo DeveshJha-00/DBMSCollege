@@ -381,6 +381,34 @@ public class MusicService {
         return false;
     }
 
+    /**
+     * Get all albums that contain a specific song
+     */
+    public List<Album> getAlbumsBySong(int songId) {
+        List<Album> albums = new ArrayList<>();
+        String sql = "SELECT a.* FROM albums a " +
+                    "JOIN contains c ON a.album_id = c.album_id " +
+                    "WHERE c.song_id = ? ORDER BY a.title";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, songId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Album album = new Album();
+                album.setAlbumId(rs.getInt("album_id"));
+                album.setTitle(rs.getString("title"));
+                album.setReleaseYear(rs.getInt("release_year"));
+                albums.add(album);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting albums by song: " + e.getMessage());
+        }
+        return albums;
+    }
+
     // Getter methods for DAOs
     public ArtistDAO getArtistDAO() { return artistDAO; }
     public SongDAO getSongDAO() { return songDAO; }

@@ -1,0 +1,1 @@
+update artists set name='Beyonce' where name='Beyoncé';
