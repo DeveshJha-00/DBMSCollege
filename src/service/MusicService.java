@@ -2,11 +2,10 @@ package service;
 
 import dao.*;
 import database.DatabaseConnection;
-import model.*;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.*;
 
 /**
  * Service class that handles business logic and relationship operations
@@ -162,29 +161,7 @@ public class MusicService {
      * Get all artists who received a specific award
      */
     public List<Artist> getArtistsByAward(int awardId) {
-        List<Artist> artists = new ArrayList<>();
-        String sql = "SELECT a.* FROM artists a " +
-                    "JOIN receives r ON a.artist_id = r.artist_id " +
-                    "WHERE r.award_id = ? ORDER BY a.name";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, awardId);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                Artist artist = new Artist();
-                artist.setArtistId(rs.getInt("artist_id"));
-                artist.setName(rs.getString("name"));
-                artist.setCountry(rs.getString("country"));
-                artist.setBirthYear(rs.getInt("birth_year"));
-                artists.add(artist);
-            }
-        } catch (SQLException e) {
-            System.err.println("Error getting artists by award: " + e.getMessage());
-        }
-        return artists;
+        return artistDAO.getArtistsByAwardId(awardId);
     }
 
     // Song-Genre relationship methods (BELONGS_TO)

@@ -1,8 +1,9 @@
 package gui.dialogs;
 
-import service.MusicService;
 import model.Album;
 import model.Song;
+import service.MusicService;
+import gui.utils.UIConstants;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,90 +12,164 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 /**
- * Dialog for adding songs to albums
+ * Dialog for adding/editing album-song relationships
  */
 public class AlbumSongDialog extends JDialog {
-    
-    private JComboBox<Album> albumComboBox;
-    private JComboBox<Song> songComboBox;
+
+    private final MusicService musicService;
+    private JComboBox<Album> albumCombo;
+    private JComboBox<Song> songCombo;
     private JTextField totalSongsField;
-    private JButton okButton;
-    private JButton cancelButton;
-    
+    private JButton okButton, cancelButton;
     private boolean confirmed = false;
-    private MusicService musicService;
-    
-    public AlbumSongDialog(Frame parent, MusicService musicService) {
-        super(parent, "Add Song to Album", true);
+
+    public AlbumSongDialog(Frame parent, String title, MusicService musicService) {
+        super(parent, title, true);
         this.musicService = musicService;
-        initializeDialog();
-        loadData();
+        initializeComponents();
+        setupLayout();
+        setupEventHandlers();
+        configureDialog();
     }
-    
-    private void initializeDialog() {
-        setSize(450, 250);
-        setLocationRelativeTo(getParent());
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        
-        createComponents();
-        layoutComponents();
-        addEventListeners();
+
+    private void initializeComponents() {
+        // Album combo box - show only titles
+        albumCombo = new JComboBox<>();
+        albumCombo.setFont(UIConstants.BODY_FONT);
+        albumCombo.setRenderer(new AlbumComboRenderer());
+        loadAlbums();
+
+        // Song combo box - show only titles
+        songCombo = new JComboBox<>();
+        songCombo.setFont(UIConstants.BODY_FONT);
+        songCombo.setRenderer(new SongComboRenderer());
+        loadSongs();
+
+        // Total songs field
+        totalSongsField = UIConstants.createStyledTextField(10);
+        totalSongsField.setToolTipText("Enter the total number of songs in this album");
+
+        // Buttons with black text and hover protection
+        okButton = UIConstants.createPrimaryButton("Add to Album");
+        okButton.setForeground(Color.BLACK);
+
+        cancelButton = UIConstants.createSecondaryButton("Cancel");
+        cancelButton.setForeground(Color.BLACK);
+
+        // Add hover protection for buttons
+        addHoverProtection();
     }
-    
-    private void createComponents() {
-        albumComboBox = new JComboBox<>();
-        songComboBox = new JComboBox<>();
-        totalSongsField = new JTextField("1", 10);
-        
-        okButton = new JButton("OK");
-        cancelButton = new JButton("Cancel");
+
+    private void addHoverProtection() {
+        JButton[] buttons = {okButton, cancelButton};
+
+        for (JButton button : buttons) {
+            button.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    button.setForeground(Color.BLACK);
+                }
+            });
+        }
     }
-    
-    private void layoutComponents() {
+
+    /**
+     * Custom renderer for Album combo box - shows only title
+     */
+    private static class AlbumComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Album) {
+                Album album = (Album) value;
+                setText(album.getTitle()); // Show only the title
+            }
+
+            return this;
+        }
+    }
+
+    /**
+     * Custom renderer for Song combo box - shows only title
+     */
+    private static class SongComboRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus) {
+            super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+            if (value instanceof Song) {
+                Song song = (Song) value;
+                setText(song.getTitle()); // Show only the title
+            }
+
+            return this;
+        }
+    }
+
+    private void loadAlbums() {
+        albumCombo.removeAllItems();
+        List<Album> albums = musicService.getAlbumDAO().getAllAlbums();
+        for (Album album : albums) {
+            albumCombo.addItem(album);
+        }
+    }
+
+    private void loadSongs() {
+        songCombo.removeAllItems();
+        List<Song> songs = musicService.getSongDAO().getAllSongs();
+        for (Song song : songs) {
+            songCombo.addItem(song);
+        }
+    }
+
+    private void setupLayout() {
         setLayout(new BorderLayout());
-        
-        // Create form panel
-        JPanel formPanel = new JPanel(new GridBagLayout());
+
+        // Main panel
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setBackground(UIConstants.PANEL_BACKGROUND);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.anchor = GridBagConstraints.WEST;
-        
+
         // Album selection
         gbc.gridx = 0; gbc.gridy = 0;
-        formPanel.add(new JLabel("Album:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(albumComboBox, gbc);
-        
+        mainPanel.add(UIConstants.createStyledLabel("Album:", UIConstants.BODY_FONT), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        mainPanel.add(albumCombo, gbc);
+
         // Song selection
-        gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Song:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(songComboBox, gbc);
-        
-        // Total songs field
-        gbc.gridx = 0; gbc.gridy = 2;
-        formPanel.add(new JLabel("Total Songs in Album:"), gbc);
-        gbc.gridx = 1;
-        formPanel.add(totalSongsField, gbc);
-        
-        // Add note
-        gbc.gridx = 1; gbc.gridy = 3;
-        JLabel noteLabel = new JLabel("(This represents the total number of songs the album will have)");
-        noteLabel.setFont(noteLabel.getFont().deriveFont(Font.ITALIC));
-        noteLabel.setForeground(Color.GRAY);
-        formPanel.add(noteLabel, gbc);
-        
-        // Create button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout());
-        buttonPanel.add(okButton);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        mainPanel.add(UIConstants.createStyledLabel("Song:", UIConstants.BODY_FONT), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        mainPanel.add(songCombo, gbc);
+
+        // Total songs
+        gbc.gridx = 0; gbc.gridy = 2; gbc.fill = GridBagConstraints.NONE; gbc.weightx = 0;
+        mainPanel.add(UIConstants.createStyledLabel("Total Songs:", UIConstants.BODY_FONT), gbc);
+        gbc.gridx = 1; gbc.fill = GridBagConstraints.HORIZONTAL; gbc.weightx = 1.0;
+        mainPanel.add(totalSongsField, gbc);
+
+        // Button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(UIConstants.PANEL_BACKGROUND);
         buttonPanel.add(cancelButton);
-        
-        // Add panels to dialog
-        add(formPanel, BorderLayout.CENTER);
+        buttonPanel.add(okButton);
+
+        add(mainPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
     }
-    
-    private void addEventListeners() {
+
+    private void setupEventHandlers() {
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -104,108 +179,91 @@ public class AlbumSongDialog extends JDialog {
                 }
             }
         });
-        
-        cancelButton.addActionListener(e -> dispose());
-        
-        // Add Enter key support
-        getRootPane().setDefaultButton(okButton);
-        
-        // Add Escape key support
-        KeyStroke escapeKeyStroke = KeyStroke.getKeyStroke("ESCAPE");
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(escapeKeyStroke, "ESCAPE");
-        getRootPane().getActionMap().put("ESCAPE", new AbstractAction() {
+
+        cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                confirmed = false;
                 dispose();
             }
         });
-    }
-    
-    private void loadData() {
-        // Load albums
-        List<Album> albums = musicService.getAlbumDAO().getAllAlbums();
-        for (Album album : albums) {
-            albumComboBox.addItem(album);
-        }
-        
-        // Load songs
-        List<Song> songs = musicService.getSongDAO().getAllSongs();
-        for (Song song : songs) {
-            songComboBox.addItem(song);
-        }
-        
-        // Set custom renderers to show meaningful text
-        albumComboBox.setRenderer(new DefaultListCellRenderer() {
+
+        // Auto-populate total songs when album is selected
+        albumCombo.addActionListener(new ActionListener() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Album) {
-                    Album album = (Album) value;
-                    setText(album.getTitle() + " (" + album.getReleaseYear() + ")");
+            public void actionPerformed(ActionEvent e) {
+                Album selectedAlbum = (Album) albumCombo.getSelectedItem();
+                if (selectedAlbum != null) {
+                    int existingTotal = musicService.getTotalSongsInAlbum(selectedAlbum.getAlbumId());
+                    if (existingTotal > 0) {
+                        totalSongsField.setText(String.valueOf(existingTotal));
+                    }
                 }
-                return this;
-            }
-        });
-        
-        songComboBox.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Song) {
-                    Song song = (Song) value;
-                    setText(song.getTitle() + (song.getDuration() != null ? " [" + song.getFormattedDuration() + "]" : ""));
-                }
-                return this;
             }
         });
     }
-    
+
     private boolean validateInput() {
-        if (albumComboBox.getSelectedItem() == null) {
-            showError("Please select an album.");
+        if (albumCombo.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Please select an album.",
+                                        "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
-        if (songComboBox.getSelectedItem() == null) {
-            showError("Please select a song.");
+
+        if (songCombo.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(this, "Please select a song.",
+                                        "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
+
+        String totalSongsText = totalSongsField.getText().trim();
+        if (totalSongsText.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter the total number of songs.",
+                                        "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
         try {
-            int totalSongs = Integer.parseInt(totalSongsField.getText().trim());
+            int totalSongs = Integer.parseInt(totalSongsText);
             if (totalSongs <= 0) {
-                showError("Total songs must be a positive number.");
-                totalSongsField.requestFocus();
+                JOptionPane.showMessageDialog(this, "Total songs must be a positive number.",
+                                            "Validation Error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         } catch (NumberFormatException e) {
-            showError("Total songs must be a valid number.");
-            totalSongsField.requestFocus();
+            JOptionPane.showMessageDialog(this, "Please enter a valid number for total songs.",
+                                        "Validation Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        
+
         return true;
     }
-    
-    private void showError(String message) {
-        JOptionPane.showMessageDialog(this, message, "Validation Error", JOptionPane.ERROR_MESSAGE);
+
+    private void configureDialog() {
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        pack();
+        setLocationRelativeTo(getParent());
+        setResizable(false);
     }
-    
+
+    // Getters
     public boolean isConfirmed() {
         return confirmed;
     }
-    
-    public int getSelectedAlbumId() {
-        Album album = (Album) albumComboBox.getSelectedItem();
-        return album != null ? album.getAlbumId() : -1;
+
+    public Album getSelectedAlbum() {
+        return (Album) albumCombo.getSelectedItem();
     }
-    
-    public int getSelectedSongId() {
-        Song song = (Song) songComboBox.getSelectedItem();
-        return song != null ? song.getSongId() : -1;
+
+    public Song getSelectedSong() {
+        return (Song) songCombo.getSelectedItem();
     }
-    
+
     public int getTotalSongs() {
-        return Integer.parseInt(totalSongsField.getText().trim());
+        try {
+            return Integer.parseInt(totalSongsField.getText().trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 }

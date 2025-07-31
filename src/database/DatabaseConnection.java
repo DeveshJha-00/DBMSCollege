@@ -5,8 +5,8 @@ public class DatabaseConnection {
     // Database credentials and URL
     private static final String URL = "jdbc:mysql://localhost:3306/musicdb";
     private static final String USERNAME = "root";
-    private static final String PASSWORD = "rootPassword";
-
+    private static final String PASSWORD = "Aryan@3101";
+   
     // Load the JDBC driver (optional in newer versions)
     static {
         try {

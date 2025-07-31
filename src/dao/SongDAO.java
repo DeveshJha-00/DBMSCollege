@@ -1,11 +1,10 @@
 package dao;
 
 import database.DatabaseConnection;
-import model.Song;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import model.Song;
 
 /**
  * Data Access Object for Song entity
@@ -147,6 +146,97 @@ public class SongDAO {
             System.err.println("Error searching songs: " + e.getMessage());
         }
         return songs;
+    }
+
+    // Relationship methods for Song-Genre (BELONGS_TO)
+
+    /**
+     * Get all genres for a song
+     */
+    public List<model.Genre> getGenresBySongId(int songId) {
+        List<model.Genre> genres = new ArrayList<>();
+        String sql = "SELECT g.* FROM genres g " +
+                    "JOIN belongs_to bt ON g.genre_id = bt.genre_id " +
+                    "WHERE bt.song_id = ? ORDER BY g.name";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, songId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                model.Genre genre = new model.Genre();
+                genre.setGenreId(rs.getInt("genre_id"));
+                genre.setName(rs.getString("name"));
+                genre.setDescription(rs.getString("description"));
+                genres.add(genre);
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting genres by song: " + e.getMessage());
+        }
+        return genres;
+    }
+
+    /**
+     * Get who assigned a genre to a song
+     */
+    public String getGenreAssignedBy(int songId, int genreId) {
+        String sql = "SELECT assigned_by FROM belongs_to WHERE song_id = ? AND genre_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, songId);
+            pstmt.setInt(2, genreId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("assigned_by");
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting genre assigned by: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Add a song-genre relationship
+     */
+    public boolean addSongGenre(int songId, int genreId, String assignedBy) {
+        String sql = "INSERT INTO belongs_to (song_id, genre_id, assigned_by) VALUES (?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, songId);
+            pstmt.setInt(2, genreId);
+            pstmt.setString(3, assignedBy);
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error adding song genre: " + e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Remove a song-genre relationship
+     */
+    public boolean removeSongGenre(int songId, int genreId) {
+        String sql = "DELETE FROM belongs_to WHERE song_id = ? AND genre_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, songId);
+            pstmt.setInt(2, genreId);
+
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Error removing song genre: " + e.getMessage());
+        }
+        return false;
     }
 
     // Helper method to map ResultSet to Song object

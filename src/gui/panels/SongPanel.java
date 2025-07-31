@@ -1,196 +1,360 @@
 package gui.panels;
 
-import service.MusicService;
-import gui.MusicStreamingGUI;
+import gui.MainWindow.RefreshablePanel;
 import gui.dialogs.SongDialog;
-import model.Song;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import gui.models.SongTableModel;
+import gui.utils.BeautifulPanel;
+import gui.utils.LayoutHelper;
+import gui.utils.UIConstants;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
-
+import javax.swing.*;
+import javax.swing.table.TableRowSorter;
+import model.Song;
+import service.MusicService;
 /**
- * Panel for managing songs in the music streaming application
+ * Panel for managing songs in the music database
  */
-public class SongPanel extends BasePanel {
-    
-    private DefaultTableModel tableModel;
+public class SongPanel extends JPanel implements RefreshablePanel {
+
+    private MusicService musicService;
+    private JTable songTable;
+    private SongTableModel tableModel;
+    private TableRowSorter<SongTableModel> sorter;
     private JTextField searchField;
-    private JButton searchButton;
-    
-    public SongPanel(MusicService musicService, MusicStreamingGUI parentFrame) {
-        super(musicService, parentFrame);
-        addSearchComponents();
+    private JButton addButton, editButton, deleteButton, refreshButton;
+
+    public SongPanel(MusicService musicService) {
+        this.musicService = musicService;
+        initializeComponents();
+        setupLayout();
+        setupEventHandlers();
+        refreshData();
     }
-    
-    @Override
-    protected void createTable() {
-        // Define column names
-        String[] columnNames = {"ID", "Title", "Duration", "Release Year"};
-        
-        // Create table model
-        tableModel = new DefaultTableModel(columnNames, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false; // Make table read-only
-            }
-        };
-        
-        // Create table
-        dataTable = new JTable(tableModel);
-        dataTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        dataTable.getTableHeader().setReorderingAllowed(false);
-        
-        // Set column widths
-        dataTable.getColumnModel().getColumn(0).setPreferredWidth(50);  // ID
-        dataTable.getColumnModel().getColumn(1).setPreferredWidth(250); // Title
-        dataTable.getColumnModel().getColumn(2).setPreferredWidth(100); // Duration
-        dataTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Release Year
-        
-        // Create scroll pane
-        scrollPane = new JScrollPane(dataTable);
-        scrollPane.setPreferredSize(new Dimension(600, 400));
-    }
-    
-    private void addSearchComponents() {
-        // Create search panel
-        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchPanel.add(new JLabel("Search Songs:"));
-        
+
+    private void initializeComponents() {
+        // Create table model and table
+        tableModel = new SongTableModel();
+        songTable = new JTable(tableModel);
+        songTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // Configure table appearance
+        gui.utils.UIConstants.configureTable(songTable);
+
+        // Create sorter
+        sorter = new TableRowSorter<>(tableModel);
+        songTable.setRowSorter(sorter);
+
+        // Create search field
         searchField = new JTextField(20);
-        searchButton = new JButton("Search");
-        JButton clearButton = new JButton("Clear");
-        
-        searchButton.addActionListener(e -> searchSongs());
-        clearButton.addActionListener(e -> {
-            searchField.setText("");
-            refreshData();
-        });
-        
-        // Add Enter key support for search field
-        searchField.addActionListener(e -> searchSongs());
-        
+        searchField.setToolTipText("Search songs by title");
+
+        // Create buttons
+        addButton = new JButton("Add Song");
+        editButton = new JButton("Edit Song");
+        deleteButton = new JButton("Delete Song");
+        refreshButton = new JButton("Refresh");
+
+        // Initially disable buttons that require selection
+        editButton.setEnabled(false);
+        deleteButton.setEnabled(false);
+    }
+
+    private void setupLayout() {
+        setLayout(new BorderLayout());
+
+        // Add beautiful gradient background for Song panel
+        setBackground(UIConstants.BACKGROUND_COLOR);
+        setOpaque(false); // Make transparent to show custom background
+
+        // Create beautiful header with gradient using BeautifulPanel (same as Artist/Search)
+        BeautifulPanel headerPanel = BeautifulPanel.createHeaderPanel(
+            "🎵 Song Management",
+            "Manage individual tracks - add, edit, and organize your music library"
+        );
+
+        // Create main content area using LayoutHelper
+        JPanel mainContentPanel = LayoutHelper.createContentArea();
+
+        // Create compact search and button panel
+        JPanel controlPanel = createCompactControlPanel();
+
+        // Create enhanced table panel
+        JPanel tablePanel = createEnhancedTablePanel();
+
+        // Layout main content with minimal spacing
+        mainContentPanel.add(controlPanel, BorderLayout.NORTH);
+        mainContentPanel.add(tablePanel, BorderLayout.CENTER);
+
+        // Add components to main panel
+        add(headerPanel, BorderLayout.NORTH);
+        add(mainContentPanel, BorderLayout.CENTER);
+    }
+
+    private JPanel createCompactControlPanel() {
+        BeautifulPanel panel = BeautifulPanel.createContentCard();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+
+        // Search section
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        searchPanel.setOpaque(false);
+
+        JLabel searchLabel = UIConstants.createStyledLabel("🔍 Search Songs:", UIConstants.SUBTITLE_FONT);
+        searchLabel.setForeground(UIConstants.PRIMARY_COLOR);
+        searchField.setPreferredSize(new Dimension(220, 28));
+
+        searchPanel.add(searchLabel);
+        searchPanel.add(Box.createHorizontalStrut(8));
         searchPanel.add(searchField);
-        searchPanel.add(searchButton);
-        searchPanel.add(clearButton);
-        
-        // Add search panel to the top
-        add(searchPanel, BorderLayout.NORTH);
+
+        // Button section with enhanced styling and better spacing
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        buttonPanel.setOpaque(false);
+
+        // Style buttons with EXTREMELY VISIBLE colors
+        styleButton(addButton, "➕ Add Song", new Color(0, 255, 0));        // NEON GREEN
+        styleButton(editButton, "✏️ Edit", new Color(0, 150, 255));         // ELECTRIC BLUE
+        styleButton(deleteButton, "🗑️ Delete", new Color(255, 0, 0));       // PURE RED
+        styleButton(refreshButton, "🔄 Refresh", new Color(255, 0, 255));    // MAGENTA
+
+        buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(refreshButton);
+
+        panel.add(searchPanel, BorderLayout.WEST);
+        panel.add(buttonPanel, BorderLayout.EAST);
+
+        return panel;
     }
-    
-    @Override
-    protected void addEntity() {
-        SongDialog dialog = new SongDialog(parentFrame, "Add Song", null);
+
+    private JPanel createEnhancedTablePanel() {
+        JPanel panel = UIConstants.createCompactTablePanel(songTable);
+
+        // Add stats panel
+        JPanel statsPanel = UIConstants.createCompactStatsPanel(
+            "📊 Songs: 0",
+            "⏱️ Total Duration: 0:00",
+            "💡 Double-click to edit • Duration in MM:SS format"
+        );
+
+        panel.add(statsPanel, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void setupEventHandlers() {
+        // Search functionality
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { filterTable(); }
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { filterTable(); }
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { filterTable(); }
+        });
+
+        // Table selection listener
+        songTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                boolean hasSelection = songTable.getSelectedRow() != -1;
+                editButton.setEnabled(hasSelection);
+                deleteButton.setEnabled(hasSelection);
+            }
+        });
+
+        // Double-click to edit
+        songTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && songTable.getSelectedRow() != -1) {
+                    editSong();
+                }
+            }
+        });
+
+        // Button listeners
+        addButton.addActionListener(e -> addSong());
+        editButton.addActionListener(e -> editSong());
+        deleteButton.addActionListener(e -> deleteSong());
+        refreshButton.addActionListener(e -> refreshData());
+    }
+
+    private void filterTable() {
+        String text = searchField.getText().trim();
+        if (text.isEmpty()) {
+            sorter.setRowFilter(null);
+        } else {
+            sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
+        }
+    }
+
+    private void addSong() {
+        SongDialog dialog = new SongDialog(getParentFrame(), "Add Song", null, musicService);
         dialog.setVisible(true);
-        
+
         if (dialog.isConfirmed()) {
-            Song song = dialog.getSong();
-            if (musicService.getSongDAO().createSong(song)) {
-                showSuccess("Song added successfully!");
-                refreshData();
-            } else {
-                showError("Failed to add song.");
-            }
+            // Song is already saved in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
         }
     }
-    
-    @Override
-    protected void editEntity() {
-        int selectedId = getSelectedEntityId();
-        if (selectedId == -1) {
-            showError("Please select a song to edit.");
-            return;
-        }
-        
-        Song song = musicService.getSongDAO().getSongById(selectedId);
-        if (song == null) {
-            showError("Song not found.");
-            return;
-        }
-        
-        SongDialog dialog = new SongDialog(parentFrame, "Edit Song", song);
+
+    private void editSong() {
+        int selectedRow = songTable.getSelectedRow();
+        if (selectedRow == -1) return;
+
+        int modelRow = songTable.convertRowIndexToModel(selectedRow);
+        Song song = tableModel.getSongAt(modelRow);
+
+        SongDialog dialog = new SongDialog(getParentFrame(), "Edit Song", song, musicService);
         dialog.setVisible(true);
-        
+
         if (dialog.isConfirmed()) {
-            Song updatedSong = dialog.getSong();
-            updatedSong.setSongId(selectedId);
-            
-            if (musicService.getSongDAO().updateSong(updatedSong)) {
-                showSuccess("Song updated successfully!");
+            // Song is already updated in the dialog with relationships
+            refreshData();
+            // Success message is already shown in the dialog
+        }
+    }
+
+    private void deleteSong() {
+        int selectedRow = songTable.getSelectedRow();
+        if (selectedRow == -1) return;
+
+        int modelRow = songTable.convertRowIndexToModel(selectedRow);
+        Song song = tableModel.getSongAt(modelRow);
+
+        int option = JOptionPane.showConfirmDialog(this,
+            "Are you sure you want to delete song '" + song.getTitle() + "'?\n" +
+            "This will also delete all related relationships.",
+            "Confirm Delete",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+
+        if (option == JOptionPane.YES_OPTION) {
+            if (musicService.getSongDAO().deleteSong(song.getSongId())) {
                 refreshData();
+                JOptionPane.showMessageDialog(this, "Song deleted successfully!",
+                                            "Success", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                showError("Failed to update song.");
+                JOptionPane.showMessageDialog(this, "Failed to delete song!",
+                                            "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
-    
-    @Override
-    protected void deleteEntity() {
-        int selectedId = getSelectedEntityId();
-        if (selectedId == -1) {
-            showError("Please select a song to delete.");
-            return;
-        }
-        
-        if (confirmDelete("song")) {
-            if (musicService.getSongDAO().deleteSong(selectedId)) {
-                showSuccess("Song deleted successfully!");
-                refreshData();
-            } else {
-                showError("Failed to delete song. Song may have associated records.");
-            }
-        }
-    }
-    
+
     @Override
     public void refreshData() {
-        // Clear existing data
-        tableModel.setRowCount(0);
-        
-        // Load all songs
         List<Song> songs = musicService.getSongDAO().getAllSongs();
-        
-        // Add songs to table
-        for (Song song : songs) {
-            Object[] row = {
-                song.getSongId(),
-                song.getTitle(),
-                song.getDuration() != null ? song.getFormattedDuration() : "",
-                song.getReleaseYear() != null ? song.getReleaseYear() : ""
-            };
-            tableModel.addRow(row);
-        }
-        
-        // Update status
-        showSuccess("Loaded " + songs.size() + " songs");
+        tableModel.setSongs(songs);
+
+        // Clear selection
+        songTable.clearSelection();
+        editButton.setEnabled(false);
+        deleteButton.setEnabled(false);
     }
-    
-    private void searchSongs() {
-        String searchTerm = searchField.getText().trim();
-        if (searchTerm.isEmpty()) {
-            refreshData();
-            return;
+
+    private void styleButton(JButton button, String text, Color color) {
+        button.setText(text);
+        button.setFont(new Font("Arial", Font.BOLD, 14)); // Optimized font size for smaller buttons
+        button.setForeground(Color.BLACK); // BLACK text for maximum contrast
+        button.setBackground(color);
+
+        // Enhanced border with shadow effect for better visibility
+        button.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(color.darker().darker(), 2), // Thicker, darker border
+                BorderFactory.createLineBorder(color.brighter(), 1) // Inner bright border
+            ),
+            BorderFactory.createEmptyBorder(8, 16, 8, 16) // More padding
+        ));
+
+        button.setFocusPainted(false);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        // Set optimized size for better layout without overlap
+        button.setPreferredSize(new Dimension(140, 40)); // Smaller but still visible buttons
+        button.setMinimumSize(new Dimension(140, 40));
+
+        // Enhanced hover effect with better contrast
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                button.setBackground(color.brighter());
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(color.darker().darker(), 3), // Even thicker on hover
+                        BorderFactory.createLineBorder(Color.WHITE, 1) // White inner border on hover
+                    ),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                ));
+            }
+
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                button.setBackground(color);
+                button.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(color.darker().darker(), 2),
+                        BorderFactory.createLineBorder(color.brighter(), 1)
+                    ),
+                    BorderFactory.createEmptyBorder(8, 16, 8, 16)
+                ));
+            }
+        });
+    }
+
+    private JFrame getParentFrame() {
+        Container parent = getParent();
+        while (parent != null && !(parent instanceof JFrame)) {
+            parent = parent.getParent();
         }
-        
-        // Clear existing data
-        tableModel.setRowCount(0);
-        
-        // Search songs
-        List<Song> songs = musicService.getSongDAO().searchSongsByTitle(searchTerm);
-        
-        // Add search results to table
-        for (Song song : songs) {
-            Object[] row = {
-                song.getSongId(),
-                song.getTitle(),
-                song.getDuration() != null ? song.getFormattedDuration() : "",
-                song.getReleaseYear() != null ? song.getReleaseYear() : ""
-            };
-            tableModel.addRow(row);
+        return (JFrame) parent;
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g.create();
+
+        // Enable anti-aliasing for smooth gradients
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // Create musical note themed background for Song panel
+        GradientPaint gradient = new GradientPaint(
+            0, 0, new Color(0, 100, 0, 35),             // Dark green with transparency
+            getWidth(), getHeight(), new Color(34, 139, 34, 20)  // Forest green with transparency
+        );
+
+        g2d.setPaint(gradient);
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        // Add musical notes pattern
+        g2d.setColor(new Color(0, 128, 0, 40));
+        Font noteFont = new Font("Arial Unicode MS", Font.BOLD, 24);
+        g2d.setFont(noteFont);
+
+        String[] notes = {"♪", "♫", "♬", "♩", "♭", "♯"};
+        for (int i = 50; i < getWidth(); i += 120) {
+            for (int j = 80; j < getHeight(); j += 100) {
+                String note = notes[(i + j) % notes.length];
+                g2d.drawString(note, i, j);
+            }
         }
-        
-        // Update status
-        showSuccess("Found " + songs.size() + " songs matching '" + searchTerm + "'");
+
+        // Add staff lines
+        g2d.setStroke(new BasicStroke(1));
+        g2d.setColor(new Color(0, 100, 0, 25));
+        for (int y = 150; y < getHeight(); y += 150) {
+            for (int line = 0; line < 5; line++) {
+                g2d.drawLine(0, y + line * 8, getWidth(), y + line * 8);
+            }
+        }
+
+        g2d.dispose();
     }
 }
